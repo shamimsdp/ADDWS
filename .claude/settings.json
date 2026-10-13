@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [{ "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "SubagentStart": [{ "matcher": ".*", "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "SubagentStop": [{ "matcher": ".*", "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "PreToolUse": [{ "matcher": ".*", "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "PostToolUse": [{ "matcher": ".*", "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "PermissionRequest": [{ "matcher": ".*", "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "StopFailure": [{ "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }],
+    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/tools/agent-dashboard/claude-hook.mjs"] }] }]
+  }
+}

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Agent workspace · Inventory management</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to workspace</a>
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <a class="brand" href="#main"
+        ><span class="brand-mark" aria-hidden="true">a<span>·</span></span
+        ><span>agent<span class="brand-sub">workspace</span></span></a
+      >
+      <div class="workspace-label">DEVELOPER TOOLS</div>
+      <nav>
+        <a class="nav-link selected" href="#agents"
+          ><span aria-hidden="true">◈</span> Mission control</a
+        ><a class="nav-link" href="#activity"><span aria-hidden="true">≋</span> Activity feed</a
+        ><a class="nav-link" href="#project"><span aria-hidden="true">▤</span> Project progress</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="local-dot" aria-hidden="true"></span> Local workspace
+        <p>One team. A shared view.</p>
+        <small>Read-only · Loopback only</small>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div><span class="breadcrumb">Workspace /</span> Mission control</div>
+        <div class="connection" id="connection" role="status">
+          <span class="connection-dot" aria-hidden="true"></span
+          ><span id="connection-label">Connecting…</span>
+        </div>
+      </header>
+      <main id="main">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">YOUR DEVELOPMENT TEAM</p>
+            <h1>Good work starts here<span>.</span></h1>
+            <p class="intro">See who is working, what is moving, and what comes next.</p>
+          </div>
+          <div class="project-chip">
+            <span class="project-icon" aria-hidden="true">▦</span>
+            <div>
+              <small>PROJECT</small><strong id="project-name">Inventory management system</strong>
+            </div>
+          </div>
+        </div>
+        <div id="connection-warning" class="notice" role="alert" hidden>
+          Disconnected from the local server. Retrying automatically; displayed activity may be out
+          of date.
+        </div>
+        <div class="collector-status" role="status">
+          <span id="collector-dot" class="collector-dot" aria-hidden="true"></span>
+          <span id="collector-label">Checking automatic activity collector…</span>
+          <span id="collector-seen"></span>
+        </div>
+        <section class="metrics" aria-label="Team status">
+          <div>
+            <span class="metric-icon lime" aria-hidden="true">↗</span>
+            <div><strong id="active-count">—</strong><span>Active agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon blue" aria-hidden="true">Ⅱ</span>
+            <div><strong id="waiting-count">—</strong><span>Waiting agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon purple" aria-hidden="true">✓</span>
+            <div><strong id="completed-count">—</strong><span>Completed agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon neutral" aria-hidden="true">◷</span>
+            <div><strong id="other-count">—</strong><span>Idle / stale / failed</span></div>
+          </div>
+        </section>
+        <section
+          id="agent-stage"
+          class="agent-stage"
+          data-state="idle"
+          aria-labelledby="stage-title"
+        >
+          <div class="stage-heading">
+            <div>
+              <p class="eyebrow">LIVE AGENT OBSERVATORY</p>
+              <h2 id="stage-title">A closer look at the work.</h2>
+            </div>
+            <div class="stage-controls">
+              <button id="follow-live" type="button" aria-pressed="true">Follow live</button>
+              <button id="motion-toggle" type="button" aria-pressed="false">Pause motion</button>
+            </div>
+          </div>
+          <div class="observatory">
+            <div class="activity-stations" aria-label="Reported activity categories">
+              <div data-activity="thinking">
+                <span>✦</span>
+                <div><strong>Thinking</strong><small>Explicit planning report</small></div>
+              </div>
+              <div data-activity="reading">
+                <span>▤</span>
+                <div><strong>Reading files</strong><small>Read tools</small></div>
+              </div>
+              <div data-activity="searching">
+                <span>⌕</span>
+                <div><strong>Searching</strong><small>Discovery tools</small></div>
+              </div>
+              <div data-activity="coding">
+                <span>&lt;/&gt;</span>
+                <div><strong>Writing code</strong><small>Edit and write tools</small></div>
+              </div>
+              <div data-activity="running">
+                <span>&gt;_</span>
+                <div><strong>Running commands</strong><small>Shell tools</small></div>
+              </div>
+              <div data-activity="testing">
+                <span>✓</span>
+                <div><strong>Testing</strong><small>Explicit test report</small></div>
+              </div>
+            </div>
+            <div class="stage-center">
+              <div class="avatar-orbit" aria-hidden="true">
+                <div class="orbit-ring"></div>
+                <div class="orbit-ring inner"></div>
+                <img id="stage-avatar" src="/avatars/minhaj.svg" alt="" width="220" height="220" />
+                <span id="stage-symbol" class="stage-symbol">◷</span>
+              </div>
+              <h3 id="stage-name">Minhaj</h3>
+              <p id="stage-role">Project manager</p>
+              <div id="stage-state" class="stage-state" role="status">Ready for work</div>
+              <div class="work-indicator" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div id="stage-team" class="stage-team" aria-label="Choose an agent"></div>
+            </div>
+            <div class="stage-readout">
+              <p class="eyebrow" id="stage-mode">FOLLOWING LIVE ACTIVITY</p>
+              <h3>Current work</h3>
+              <p id="stage-task">No runtime task reported.</p>
+              <dl>
+                <dt>Reported action</dt>
+                <dd id="stage-action">No action reported</dd>
+                <dt>Last report</dt>
+                <dd id="stage-seen">Not reported</dd>
+                <dt>Source</dt>
+                <dd id="stage-source">Source not reported</dd>
+              </dl>
+              <label class="stage-session-label"
+                >Session<select id="stage-session" aria-label="Choose agent session">
+                  <option value="">No sessions reported</option>
+                </select></label
+              >
+              <p id="stage-evidence" class="stage-evidence">Activity comes from reported events.</p>
+            </div>
+          </div>
+        </section>
+        <section class="pipeline-panel" aria-label="Team handoff pipeline">
+          <div class="section-mini">
+            <strong>The handoff pipeline</strong><span>Each role owns one part of delivery</span>
+          </div>
+          <div id="pipeline" class="pipeline"></div>
+        </section>
+        <section id="agents" aria-labelledby="team-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="team-title">Meet your crew <span class="count-pill">4</span></h2>
+              <p>
+                Runtime activity is reported by sessions. Task assignments are shown separately.
+              </p>
+            </div>
+            <div class="filters">
+              <label
+                >Role<select id="role-filter" aria-label="Filter by role">
+                  <option value="all">All roles</option>
+                  <option value="minhaj">Project manager</option>
+                  <option value="rabbi">Backend</option>
+                  <option value="shamim">Frontend</option>
+                  <option value="tanvir">QA</option>
+                </select></label
+              ><label
+                >Status<select id="status-filter" aria-label="Filter by status">
+                  <option value="all">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="waiting">Waiting</option>
+                  <option value="idle">Idle</option>
+                  <option value="completed">Completed</option>
+                  <option value="failed">Failed</option>
+                  <option value="stale">Stale</option>
+                </select></label
+              >
+            </div>
+          </div>
+          <div id="agent-grid" class="agent-grid"></div>
+          <p id="no-match" class="empty" hidden>No agents match these filters.</p>
+        </section>
+        <div class="lower-grid">
+          <section id="activity" class="panel" aria-labelledby="activity-title">
+            <div class="panel-heading">
+              <h2 id="activity-title">Live activity</h2>
+              <span class="subtle" id="event-count">Awaiting telemetry</span>
+            </div>
+            <p class="panel-description">Reported actions, handoffs and session updates.</p>
+            <ol id="timeline" class="timeline"></ol>
+            <div id="onboarding" class="onboarding">
+              <span class="onboarding-icon" aria-hidden="true">⌁</span>
+              <h3>Ready when your agents are.</h3>
+              <p>
+                No activity has been reported yet. Start a session with the reporting command or
+                connect the Claude hooks.
+              </p>
+              <code>node tools/agent-dashboard/report.mjs --help</code
+              ><small>Assignments do not indicate that an agent is running.</small>
+            </div>
+          </section>
+          <aside class="panel detail-panel" aria-labelledby="detail-title">
+            <div class="panel-heading">
+              <h2 id="detail-title">Agent details</h2>
+              <button id="close-detail" class="icon-button" aria-label="Close agent details" hidden>
+                ×
+              </button>
+            </div>
+            <div id="detail-empty" class="detail-empty">
+              <div aria-hidden="true">↖</div>
+              <h3>A closer look</h3>
+              <p>Select an agent to inspect its sessions, assignment and latest reported work.</p>
+            </div>
+            <div id="detail-content" hidden></div>
+          </aside>
+        </div>
+        <section id="project" class="project-grid" aria-label="Project progress and queue">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Project progress</h2>
+              <span class="subtle">From feature tracker</span>
+            </div>
+            <div class="progress-heading">
+              <strong id="progress-percent">—</strong
+              ><span id="progress-summary">Waiting for project snapshot</span>
+            </div>
+            <progress
+              id="project-progress"
+              max="100"
+              value="0"
+              aria-label="Completed project features"
+            ></progress>
+            <div class="progress-legend">
+              <span><i class="legend-dot done"></i><b id="done-count">—</b> done</span
+              ><span
+                ><i class="legend-dot working"></i><b id="progress-count">—</b> in progress</span
+              ><span><i class="legend-dot blocked"></i><b id="blocked-count">—</b> blocked</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Up next</h2>
+              <span class="subtle">Dependency-ranked queue</span>
+            </div>
+            <ul id="next-queue" class="next-queue"></ul>
+          </div>
+        </section>
+        <footer>
+          <span>Local telemetry · No customer data</span
+          ><span id="snapshot-time">Waiting for first snapshot</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

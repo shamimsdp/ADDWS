@@ -1,0 +1,1661 @@
+=== page-01.png ===
+Apparel Inventory & Retail Platform for
+Bangladesh: Competitor Analysis, Module
+Blueprint, AI Roadmap and Pricing Strategy
+The opening is real. Bangladesh has no affordable, cloud-first, apparel-specific inventory
+platform that brings together a style/size/color matrix, multi-outlet stock,
+Facebook/courier order flow, NBR Mushak compliance and Al planning. Local tools are
+either generic shop POS systems costing i350-i5,OOO/month, or heavy ERP/VAT systems
+that need installation fees and customization. International tools that do fashion well
+(Lightspeed, Shopify POS Pro, Cin7, Ginesys, Nextail) are priced at roughly i5,OOO-
+per month or per location, and none of them handles bKash/Nagad,
+Pathao/SteadfastlRedX, or Mushak 6.3 out Of the box•
+TL;DR
+• Market gap: Local POS vendors (Mediasoft RMG Master, PridePOS, AmarSolution, E-
+hishab, Hisabe, Zaman IT, Dynamic POS, Nexchar) compete mainly on low price and basic
+billing. Their apparel depth, omnichannel sync and Al are thin or absent. A separate wave of
+Bangladeshi "commerce OS" tools (Pathao Commerce, Storea, EcomDrive, Dakio, Banikh)
+handles Facebook orders and couriers, but not multi-outlet store retail, production, or VAT.
+Nobody combines both for clothing brands.
+• What to build: An MVP that nails a style x color x size matrix with barcodes, multi-outlet
+stock with Mushak 6.5 transfers, offline POS with exchanges and Mushak 6.3 invoices, a
+Facebook/website order desk with PathaolSteadfast/RedX booking, and a Bangla Al
+assistant with festival-aware reorder suggestions. Production/CMT, loyalty, franchise and
+advanced Al (size curves, allocation, markdowns) follow in later phases.
+• Pricing: Price in BDT, per outlet, monthly, with a free/low tier for Facebook-first brands and
+no big upfront licence. A suggested ladder is iO Starter, -il,500 Boutique, -i3,500 Brand (up
+to 3 outlets) and -12,000 per additional outlet, with Al and VAT as paid add-ons or bundled
+in higher tiers. This undercuts international tools by 70-90% while sitting above
+commodity local POS, which is justified by apparel depth.
+Key Findings
+1. Local competition is fragmented and price-driven. Published Bangladeshi POS prices
+cluster at for cloud plans, or one-time for
+desktop/hardware bundles. Many add installation or "access" fees of
+hisha
+=== page-02.png ===
+isab
+Very few publish apparel-specific capabilities beyond "size and color" support.
+2. Mediasoft is the incumbent to beat in apparel store POS. Its RMG Master line targets
+"single-location stores and multi-location chains" and is paired with its NBR-enlisted
+vATPro.
+ediasoftbd
+Even so, this research found no public client list naming which major fashion brands
+(Aarong, Yellow, Sailor, Richman, Easy, Cats Eye, Le Reve, etc.) run which system. Large
+brands appear to use enterprise ERPs (Dynamics/LS Central, SAP, Oracle, Odoo via
+partners) or in-house systems, but this is unverified.
+3. Social commerce is the bigger, faster-moving battleground. Pathao's Pathao Commerce
+launch press release (Sept 2026) says Bangladesh's social commerce ecosystem
+"comprises 200,000 merchants and represents over 80% of all digital commerce". The
+same release says returns are "at a single-digit level, compared to around 30% for online
+marketplaces in Bangladesh." New tools already bundle courier booking, COD fraud checks
+and even Al confirmation calls.
+tore
+A clothing-brand product must treat Facebook/lnstagram/WhatsApp orders as first-class,
+not as an add-on.
+4. VAT compliance is a real but shifting requirement. Branded and non-branded apparel
+sellers are listed at a 7.5% VAT rate (FY 2025-26 Third Schedule, service code S078).
+ax ertb
+The Dhaka Tribune reports that "Installation of EFD has been made mandatory in 25
+sectors, including departmental stores, retail stores, hotels and restaurants", with Genex
+devices going to "businesses with daily sales of more than Tk17,OOO on average." In
+practice, however, the EFD/SDC rollout via Genex Infosys has underperformed, and NBR is
+moving towards software-based e-invoicing and the renamed "e-VAT" system.
+hefinancialex res
+atu dat
+7
+Building Mushak-ready data structures now is a differentiator. Formal NBR enlistment can
+come later.
+5. Al is now table stakes at the top end, absent at the bottom. Ginesys.Al agents, Nextail
+and Toolio sell ML forecasting, allocation and size curves to fashion chains, and Hishabee
+ERP advertises a Bangla/English Al assistant on live data•
+7
+Local apparel POS tools offer essentially no forecasting, allocation or markdown Al, so a
+Bangla-native, festival-aware Al layer is the clearest differentiator available.
+=== page-03.png ===
+1. Local Competitor Analysis (Bangladesh)
+1.1 Verification of the names in the brief
+Name in brief
+Hishabee
+TallyKhata
+Status after research
+Exists, but there are two distinct products.
+Relevance
+hishabee.io is a mobile-first MSME app (founded
+Medium (SME
+2020, Dhaka) with a free tier. hishabee.com is
+and micro-
+"Hishabee ERP", "a product of ZamZamlT", with an
+retail)
+Al assistant.
+7
+Exists (Progoti Systems). It is a digital ledger with
+a free Standard version; "Gold" adds stock
+Low-medium
+accounting and multi-business. No BDT price is
+(micro shops)
+published
+7
+Mokam is 82B wholesale sourcing for grocery
+retailers, not a fashion POS. Bikroy is a classifieds
+Low I price-
+Shopup/Mokam, Bikroy marketplace listing "22+ POS software" ads "from
+signal only
+BDT
+7
+Verified. Clothing/boutique POS with size/color
+Mediasoft (RMG Master, inventory and multi-location chains, plus an NBR-
+High
+VATPro)
+Pridesys (PridePOS)
+AmarSolution
+Smart POS BD, Ezzy
+pos, Retailrr, Zaynax,
+Bdtask, Softwind,
+Datasoft
+Brand-specific systems
+(Aarong, Yellow, Sailor,
+Richman/lnfinity, Easy,
+enlisted VAT
+7
+Verified. Cloud POS-ERP "for. fashion brands,
+and chain businesses" with VAT support.E.i@éE.E High
+Verified. Fashion POS supporting bKash, Nagad
+and Rocket, Bangla menus, and Medium-High
+Not verified in this research as apparel POS
+Treat as
+vendors with public offerings (Smart POS appears
+only in third-party lists).
+No primary-source evidence found of which
+POS/ERP each uses. BRAC International job
+postings seek ERP leads with
+unconfirmed
+Validate in
+customer
+interviews
+=== page-04.png ===
+Name in brief
+Cats Eye, Le Reve,
+Lubnan)
+Status after research
+Dynamics/SAP/Oracle experience, but this
+concerns BRAC International, not Aarong's store
+POS. Known web front ends (e.g., Aarong
+headless Next.js) are not inventory systems.
+7
+e ondbracket
+Relevance
+1.2 Local competitor profiles
+Offer & key
+Vendor I product
+features
+Inventory
+"according to
+various sizes and
+colors",
+distribution across
+stores, loyalty,
+SMS/email bills.
+ediasoftbd
+Mediasoft - RMG
+Master/
+7
+Boutique POS +
+Target segment Pricing (BDT)
+VATPro
+Pridesys -
+PridePOS
+Mediasoft calls
+itself "the largest
+retail software
+solution provider
+company in
+Bangladesh" (est.
+7
+ediasoftbd
+7
+Real-time
+Single stores to
+multi-location
+chains
+Fashion brands,
+Not published
+(quote)
+Vendor's own
+guide: small
+shop i10,ooo-
+30,000;
+supermarket
+i50,ooo-
+enterprise
+Deployment
+Desktop +
+CloudPOS
+Cloud
+No
+ERI
+inventory, barcode chains,
+billing, ERP
+integration, multi-
+7
+supermarkets
+=== page-05.png ===
+Offer & key
+Vendor I product
+features
+Target segment Pricing (BDT)
+Deployment
+Cloud
+AmarSolution -
+Fashion Shop
+Software
+E-hishab POS
+Hisabe
+Outlet-by-outlet
+dashboards,
+Boutiques to
+collectionlseasonal
+multi-outlet
+insights
+marsolution
+Accounting +
+multi-branch POS
+POSIledger
+chains
+Small to mid
+retail
+Micro & small
+retail
+custom
+rides
+7
+Not published
+Silver
+il,OOO/mo (1
+branch, t15,ooo
+install); Gold
+il,500 (0
+branches,
+05,000);
+Cloud
+Platinum 8,000
+€7,
+Custom i5,ooo
+(unlimited,
+i80,000)
+hisha
+Uddokta
+i350/mo (1
+location, 2
+users, 250
+products);
+Sthayitto i550
+(4 users, 350
+products); Otol
+Cloud
+750 (5 users,
+700 products)
+plus one-time
+access
+fee;
+7,500 one-time
+hisabe
+7
+No
+No
+=== page-06.png ===
+Offer & key
+Vendor I product
+features
+Barcode POS,
+Target segment Pricing (BDT)
+Deployment
+SaaS
+Zaman IT POS
+Dynamic POS
+Nexchar POS
+Hishabee ERP
+(ZamZamIT)
+purchases,
+branches; "200
+shop and
+pharmacy" users
+aman-i
+"Cloth Shop" /
+"Fashion Shop"
+POS editions
+Cloud POS that
+works offline and
+syncs; fashion
+house edition
+excha
+7
+Eight modules (HR
+& payroll,
+accounting,
+inventory,
+procurement,
+projects, tasks,
+customers,
+reports); 70+
+reports; Al
+assistant
+Small shops
+Single outlet
+Small retail incl.
+boutiques
+SMEs
+Basic
+i15,OOO/yr (1
+shop, 1 user);
+Advance
+24,000/yr
+(unlimited
+users);
+Enterprise
+86,000/yr
+(multiple
+shops)
+it
+i8,ooo one-
+time
+(discounted
+from 110,000)
+No
+Online/offline No
+per single
+outlet; full ERP
+20,000
+namic osbd
+Schema price
+i500; free start CIOLJd +
+7
+Not published
+No
+desktop
+Multi-tenant No
+SaaS EfiE
+7
+=== page-07.png ===
+Offer & key
+Vendor I product
+features
+answering from
+live data in
+Bangla/English
+Target segment
+Micro shops
+Pricing (BOT)
+Free tiers;
+Deployment
+Hishabee
+(hishabee.io) I
+TallyKhata
+Commerce OS
+tools: Pathao
+Commerce,
+Storea,
+EcomDrive,
+Dakio, Banikh,
+Nuport
+ishabe
+Mobile ledger,
+stock, dues
+premium prices Android-first
+Storefronts, order
+desks, inventory,
+courier booking.
+Storea supports
+Steadfast, RedX,
+Pathao, Carrybee
+and Paperfly; Dakio
+Facebook/online
+uses "Al calls to
+confirm risky COD first sellers
+orders"; EcomDrive
+has "Al agents";
+Nuport is a 3PL
+"trusted by 1000+
+leading online
+not published
+hishabee +
+Banikh free;
+_ others mostly
+unpublished
+banikh
+Not published
+Cloud
+blQ
+Fac
+NBR-enlisted VAT
+software (Prime
+Full Mushak suite
+VAT/iBOS,
+including 9.1 return VAT-registered
+Uddogi/Nascenia,
+firms
+bos +
+Troyee,
+7
+OVATIOpus,
+SmartVAT, DTCL)
+Cloud/desktop Cal
+=== page-08.png ===
+Offer & key
+Vendor I product
+features
+Odoo I Dynamics Native variant
+365 + LS Central matrix (Odoo),
+via local partners omnichannel
+Target segment Pricing (BDT)
+Odoo licence
+52); LS central
+for fashion
+Deployment
+Mid-to-large
+brands
+implementation
+Cloud/hybrid
+quoted at
+$50,000-
+$200,000 +
+ridentinf
+Via
+1.3 Compliance landscape every competitor must address
+• VAT rate: The FY 2025-26 Third Schedule lists "(a) Own Branded Garments/ Apparel seller
+(b) Other than own Branded Garments/ Apparel seller" at 7.5% (code S078).
+Conflict to note: in January 2025 the VAT and SD (Amendment) Ordinance raised the rate
+on branded apparel outlets, Prothom Alo (29 Jan 2025) then reported that "the rate was
+later reduced to IO per cent for branded clothing, while the VAT on non-branded clothing
+remained unchanged at 7.5 per cent." The FY 2025-26 chart shows 7.5%. Treat the rate as a
+configurable parameter and verify against the latest SRO before launch.
+• Mushak forms a retail product should produce or feed: 6.3 (tax invoice/challan at point of
+sale), 6.1 (purchase register), 6.2 | 6.2.1 (sales and purchase-sales registers for traders), 6.5
+(inter-branch stock transfer), 6.6 (VDS certificate), 6.7 | 6.8 (credit/debit notes for returns),
+6.10 (transactions above t2 lakh), 4.3 (input-output coefficient, for brands that
+manufacture), and 9.1 (monthly
+ediasoftbd
+• EFD/SDC:
+o The mandate. In dune 2019, NBR made EFD use compulsory in 25 sectors including clothing
+stores and shopping malls. The 2018 order stated that businesses "which will use their own
+point of sale (POS) software must have electronic fiscal printer (EFP) instead of EFD."
+hakatribun
+7
+ew ebd
+The rollout. Genex Infosys was contracted to set up 3 lakh EFDs/SDCs over five years. Per
+The Financial Express, NBR "will offer Genex Infosys Ltd a 0.52-per cent commission in
+Dhaka and 0.53 per cent in Chattogram on VAT collected through electronic devices."
+Under the NBR order, "if any business... uses POS or own software, Genex will set up
+=== page-09.png ===
+interconnectivity between an SDC and their software with the support of their software
+provider."
+o Underperformance. New Age (March 2025) reported that only 16,860 units had installed
+the device. The Business Standard (23 Aug 2024) reported "11,000 units installed instead of
+the planned 30,000 by June" and that "8,000 machines did not comply with NBR's import
+specifications" (Genex disputed the figure).
+Where policy is heading. An EOI for an "e-lnvoice System" was issued in October 2024,
+IVAS was renamed "e-VAT" in December 2025, and the Finance Bill 2026 provides that
+Mushak 6.3 issued via ERP or prescribed VAT software "may be made mandatory".
+atu dat
+7
+o Implication. Design an SDC/EFDMS integration adapter and an e-invoice export layer from
+day one. Pursue NBR VAT software enlistment, or partner with an enlisted VAT vendor,
+once you sign VAT-registered chains.
+2. International Competitor Analysis
+Product Core features
+pos, pos,
+receiving,
+Lightspeed
+Apparel-
+specific
+Matrix SKUs
+(style/size/color),
+vendor catalogs
+osbull
+Variants, BOPIS,
+ship-from-store,
+exchanges
+ask hill
+Pricing (USD)
+Basic $89, Core $149,
+Plus $289 Imo billed
+annually
+($109/$179/$339
+monthly); extra
+register $59/mo
+oftwarefinder +
+Target size
+SMB to mid multi-
+Repc
+location specialty
+limitl
+retail
+Retail (X-
+Series,
+formerly
+Vend)
+Shopify
+POS
+transfers,
+cycle counts,
+loyalty, e-
+commerce
+retail os lu
+Unified online
++ store
+inventory,
+customers,
+reports
+Base plan Basic $39, D2C brands with Sh0F
+Grow $105, Advanced stores
+$399, Plus $2,300/mo;
+POS Pro
+*$89/location/mo
+($79 annual)
+sk hill
+(gen
+=== page-10.png ===
+Product
+Apparel-
+Core features
+specific
+POS, inventory,
+Pricing (USD)
+Free; Plus $49/mo;
+Premium $149/mo
+(older sources cite
+$60-$89 for Plus)
+nerdwallet +
+Free (50 orders);
+Standard $39 ($29
+annual); higher tiers
+Target size
+Small
+Basi(
+single/multi-store
+vendor POs,
+Square for
+COGS
+Retail
+a terr
+Multi-
+warehouse,
+Zoho
+orders,
+Inventory shipping, e-
+commerce
+sync
+Variants,
+barcode
+Item groups
+(variants),
+composite items
+Full ERP: POS, Native variant
+inventory, MRP, matrix, MRP for
+Odoo
+accounting, e- garments via
+commerce, HR customization
+Inventory, B2B,
+MRP, WMS,
+Variants, B2B
+Cin7 Corel multichannel
+omni POrtal,
+SMB
+Enterprise $299/$249
+ostloo
+One App Free;
+Standard —$24.90
+promo / $31.10,
+Custom -$49 promo /
+$61 per user/mo (US); SMB to mid-
+APAC Standard -$9- market
+14 S e
+r researc
+bo an cs
+7
+Standard $349, Pro
+$599, Advanced $999
+(some sources $1,199)
+Mid-market
+Imo; Omni custom
+Zia a
+wide
+Alfe
+versi
+gene
+Fore
+wholesale + retail (den
+production BOM
+7
+tackscored
+echnolo evaluation
+=== page-11.png ===
+Product
+Ginesys
+Apparel-
+Core features
+specific
+ERR OVIS
+(Browntape),
+WMS, loyalty,
+marketplace
+integrations
+Pricing (USD)
+From $140/mo; HO
+user $75/mo, pos
+user $35/mo billed
+Mobile free; Desktop
+Retail Pro
+POS ,650/yr
+stsoftwareindi
+Custom; "Starter" for
+10-100 stores, €10M-
+€100M revenue
+nul
+Custom quote 60)
+Pricing not verified
+here
+Target size
+Mid-to-large
+Indian fashion
+chains; "700+
+customers" incl.
+Built for
+fashion/lifestyle:
+production,
+MBO, wholesale
+Basic item
+variants
+Fashion-only;
+prepacks, size
+Gine
+the I
+auto
+One (India) (Amazon, Ajio,
+Nykaa)
+ines
+ines
+Billing,
+inventory, GST,
+Manyavar, VMart for a
+Vyapar
+(India)
+Nextail
+Toolio
+Brightpearl,
+Retail Pro,
+inFlow,
+Katana,
+Marg ERP
+mobile +
+desktop
+a terr
+7
+merchandising:
+initial
+allocation,
+replenishment, integrity
+Micro & small
+Mid-to-large
+fashion chains
+Mid-market
+retai
+Mini
+ML c
+pres
+optir
+reba
+Alfo
+rebalancing
+nextai
+Merchandise
+financial
+planning, OTB,
+assortment,
+allocation
+es ress
+Not
+Unleashed, researched in
+depth for this
+report.
+Size curves by
+location, store
+Varies
+prod
+D2C/om nichannel disc(
+brands
+reco
+=== page-12.png ===
+3. Local vs International Comparison and Market Gaps
+3.1 Comparison table
+Typical
+BD pos
+commerce
+Lightspeed
+Mediasoft OS (Storea,
+Ginesys I
+Capability
+Style x size x color matrix
+Multi-outlet + transfers
+Production 1 CMT
+Facebook/lG order desk
+BD courier booking
+I Shopify
+hishab,
+1 PridePOS EcomDrive,
+Hisabe,
+Zaman,
+Dynamic)
+Basic or
+none
+Some
+(branch
+caps)
+No
+No
+Rare
+Yes
+Pathao
+Commerce)
+Basic
+(size/color) variants
+bKash/Nagad/SSLCommerzSome
+Mushak 6.3 / VAT
+Bangla Ul
+Offline POS
+Rare
+Some
+Desktop
+ones yes
+Yes
+Separate
+ERP
+Limited
+Not visible
+Some
+Yes
+(VATPro)
+Partial
+Limited
+No
+Strong
+Strong
+No
+Partial
+No
+pos
+Yes
+Yes
+No
+Shopify
+strong; FB
+weak
+No
+No
+No
+No
+Partial
+Cin7
+c
+Yes (deep)
+it
+Yes
+Yes
+Marketplaces
+(India)
+No
+No
+India GST
+No
+Desktop POS —
+=== page-13.png ===
+Typical
+BD pos
+commerce
+Lightspeed
+Mediasoft OS (Storea,
+Ginesys I
+Capability
+Al forecasting/allocation
+NL query of data
+I Shopify
+hishab,
+Hisabe,
+Zaman,
+Dynamic)
+None
+None
+i350-
+1 PridePOS EcomDrive,
+Pathao
+None
+visible
+None
+Quote;
+Commerce)
+COD-risk Al
+only
+Some "Al
+analysis"
+Price (approx. i/month per 5,000 +
+ilOk-2 lakh
+one-time Free-
+pos
+Light
+Shopify
+Sidekick
+t10,ooo-
+outlet)
+setup
+Cin7
+Ginesys.Al,
+c
+ForesightAl
+Ginesys.Al
+-i17,ooo-
+42,000+
+per
+Pridesys
+guide
+unpublished 35,000
+BDT conversions assume roughly b122 per US$ and are indicative only.
+3.2 Gaps and opportunities (ranked)
+1. "Store + Facebook" unification for 1-20 outlet brands. The typical Bangladeshi clothing
+brand runs I-IO outlets plus a Facebook page that sells as much as the stores during Eid.
+Store POS vendors ignore the page; commerce-OS vendors ignore the stores. The company
+that owns the shared stock pool, with real-time reservation when a Messenger order is
+confirmed, wins.
+2. Apparel-grade product modelling at SME prices. Hisabe caps products at 250-700 on its
+7
+One kurti style in 4 colors x 5 sizes already uses 20 SWs, so local "cheap POS" pricing
+structurally fails apparel.
+3. Festival-season operations. Eid, Pohela Boishakh, Durga Puja, winter and wedding season
+concentrate a large share of annual sales into a few weeks, yet nobody locally offers
+festival-aware forecasting, pre-season buy planning or post-festival markdown
+optimization.
+4. Compliance as a wedge into chains. Chains in malls are the VAT/EFD enforcement targets.
+Bundling Mushak 6.3/6.5/6.7 output and an SDC adapter turns compliance from a cost
+centre into a buying reason.
+5. Light production/CMT for D2C brands. Many local brands outsource cutting/sewing to
+CMT units; a simple "tech pack fabric issue CMT job -Y QC receipt" flow is missing
+=== page-14.png ===
+from POS vendors, while garment ERPs are built for export factories.
+6. Bangla Al analyst. Owners ask ("which sizes are running
+out?"), not SQL questions. Hishabee ERP shows the concept; nobody applies it to apparel
+retail
+7
+ishabe
+7. COD/returns economics. COD fraud, fake orders and returns are a margin killer.
+Integrating courier success-rate checks, OTP and Al confirmation (as Dakio and Storea do)
+into the brand's inventory system closes the loop on returned stock.aagj@
+tore
+4. Complete Module > Feature > Sub-feature Breakdown
+Legend: [MVP] = first release • [P2] = phase 2 (6—12 months) • [P3] = phase 3 (12-24
+months)
+4.1 Product Catalog & Variant Matrix
+• Style master [MVP]
+Style code, name (EN/BN), brand/sub-brand, department (Men/Women/Kids), category >
+sub-category (e.g., Panjabi > Printed)
+Attributes: fabric (cotton, linen, silk, georgette, khadi, jamdani), fit, sleeve, neckline,
+occasion, season/collection, designer, HS code
+Cost price, MRP, wholesale price, VAT category; images per color, size chart, care
+instructions
+• Variant matrix [MVP]
+Color x size grid generation (S-XXL, 28-44, kids age sizes, free size)
+Size scales/size groups reusable across styles
+Bulk edit of price/cost/barcode by matrix row or column
+Variant activation/deactivation (e.g., drop XXL in a color)
+• SW & barcode [MVP]
+Rule-based SKU generator (Brand-Season-Style-Color-Size)
+o
+EAN-13/Code-128 generation; GSI prefix support
+o
+Barcode label/hang-tag printing (thermal printers; templates with MRP, VAT-inclusive note,
+o
+Bangla text)
+Price-tag reprint after markdowns
+• Collections & seasons [MVP basic I P2 advanced]
+Season (Eid-IN-Fitr 2027, Winter 2026), drop dates, lifecycle (new, core, clearance,
+discontinued)
+Lookbook/digital catalog generation (shareable PDF/web link for Facebook) [P2]
+=== page-15.png ===
+• Bundles & sets [P2]: three-piece sets, saree + blouse piece, gift boxes
+• RFID (optional) [P3]: EPC encoding, RFID-assisted counting, anti-theft gate integration
+• Import/export [MVP]: Excel/CSV templates, image bulk upload, migration from other POS
+4.2 Purchasing & Supplier/Vendor Management
+• Supplier master [MVP]: contacts, payment terms, lead times, TIN/BIN, bank/MFS details,
+ratings
+• Purchase orders [MVP]
+Matrix PO entry (order by style with size/color grid)
+Size-curve-assisted quantity split [P2 Al]
+Approval workflow, PO PDF/WhatsApp sharing
+• Goods receipt (GRN) [MVP]: partial receipts, barcode-assisted receiving, QC pass/fail,
+landed cost (freight, duty, C&F) [P2]
+• Supplier returns & debit notes [MVP] (feeds Mushak 6.8)
+• Supplier payables [MVP]: aging, partial payments, advance payments
+• Consignment I sale-or-return stock [P2]: for designers or partner brands, with settlement
+reports
+• Vendor portal [P3]: suppliers confirm POs, upload invoices, see payment status
+4.3 Production & Manufacturing (for brands that make their own
+products) [P2]
+• Tech pack & BOM
+Fabric consumption per size, trims (buttons, zippers, labels, embroidery, packaging)
+Costing sheet: fabric + trims + CMT + overhead + margin suggested MRP
+• Raw material inventory
+Fabric by roll/meter/yard, shade/lot, GSM; trims by unit
+Fabric issue to cutting, wastage tracking
+• Production orders
+Order by style x size ratio; cut plan; stages (cutting, sewing, embroidery/karchupi, washing,
+finishing, QC, packing)
+In-house work orders and CMT/subcontract jobs: materials issued to subcontractor,
+challan, expected receipts, rejects, rate per piece, payable
+Karigarlartisan piece-rate tracking (block print, hand embroidery)
+QC & receipt to finished goods: A-grade/B-grade/reject split, auto-creation of finished
+SKUs and barcodes
+• VAT for manufacturers: Mushak 4.3 input-output coefficient, Mushak 6.4 (contract
+manufacturing) data [P3]
+4.4 Warehouse & Multi-Outlet Stock Management
+• Locations [MVP]: central warehouse, outlets, online fulfilment store, pop-up/exhibition,
+CMT unit (virtual), in-transit
+• Real-time stock [MVP]: on-hand, reserved (online orders), available, in-transit, damaged
+=== page-16.png ===
+• Bin/rack locations [P2]; batch/lot for fabric shade consistency [P2]
+• Min/max and reorder points per SKU per location [MVP manual I P2 Al]
+• Stock adjustments with reason codes [MVP]: damage, alteration, sample, gift, theft
+4.5 Stock Transfers
+• Transfer requests [MVP]: outlet -5 warehouse, warehouse outlet, outlet outlet
+• Dispatch & receive [MVP]: barcode scanning, discrepancy report, in-transit tracking
+• Mushak 6.5 auto-generation [MVP] for inter-branch transfers
+• Al-suggested rebalancing transfers [P2] (see 55)
+4.6 Stock Counting & Audits
+• Full and cycle counts [MVP]: freeze/no-freeze modes, mobile scanning
+• Blind counts & variance approval [MVP]
+• Shrinkage reports by outlet/category/staff shift [P2]; RFID counting [P3]
+4.7 POS & Sales
+• Checkout [MVP]
+Barcode/scan, style search, matrix picker (tap style -Y choose color/size)
+o
+Split payments: cash, card, bKash, Nagad, Rocket, Upay, gift voucher, store credit
+Salesperson tagging per line (for commissions)
+o
+Mushak 6.3-compliant invoice print (thermal/A4) with BIN, VAT breakdown;
+o
+SMS/WhatsApp e-receipt
+• Offline mode [MVP]: local queue with conflict-safe sync
+• Cash management [MVP]: opening float, cash in/out, day-end Z-report, cash variance
+• Holds, parked sales, quotes [MVP]
+• Alteration/tailoring orders [P2]: measurements, delivery date, advance payment,
+alteration status
+• Endless aisle [P2]: sell from another outlet/warehouse stock and ship to the customer
+• Hardware [MVP]: thermal printers, barcode scanners, cash drawers, Android POS devices
+4.8 Returns & Exchanges
+• Exchange-first flows [MVP]: size/color swap with price difference handling, which is very
+common in Bangladeshi apparel retail
+• Returns policy engine [MVP]: days allowed, festival no-exchange periods, sale-item rules
+• Credit notes (Mushak 6.7) [MVP], store credit, refund to MFS
+• Online returns [MVP]: courier return receipt QC restock or damage
+• Return reason analytics [P2]: fit issues by size, quality defects by supplier/CMT
+4.9 E-commerce & Social Commerce Sync
+• Facebook/lnstagram [MVP]
+Meta Catalog sync (products, variants, stock, prices)
+Messenger/lnstagram DM order capture into the order desk; comment-to-order [P2]
+=== page-17.png ===
+WhatsApp Business order intake and notifications
+• Website [MVP/P2]: WooCommerce and Shopify connectors; optional hosted storefront
+• Marketplaces [P2]: Daraz seller API (stock and orders); others as demand dictates
+• Channel stock rules [MVP]: online buffer, outlet exclusions, festival allocation caps
+4.10 Order Management & Courier Integration
+• Unified order desk [MVP]: statuses (new confirmed packed shipped
+delivered/returned)
+• Order confirmation [MVP]: call queue, OTP, duplicate/fake order detection; Al-assisted
+confirmation calls [P3]
+• Courier booking [MVP]: Pathao, Steadfast, RedX first; Paperfly, Carrybee, eCourier [P2];
+label printing; webhook tracking
+• Courier selection rules [P2]: by area, COD amount, success rate, cost
+• COD reconciliation [MVP]: courier settlement matching, outstanding COD reports
+• Customer delivery-success score [P2]: cross-order history (own data, optional courier
+fraud APIs)
+4.11 CRM & Loyalty
+• Customer profiles [MVP]: phone-number-centric, purchase history across store and
+online, sizes purchased
+Loyalty [P2]: points, tiers, birthday/anniversary rewards, Eid vouchers
+Campaigns [P2]: bulk SMS (local SMS gateways), WhatsApp templates, segments
+• Feedback & NPS [P3]
+4.12 Promotions, Discounts & Pricing
+• Price lists [MVP]: retail, wholesale, outlet-specific, online-specific
+• Promotions engine [MVP]: % or flat off, BOGO, buy X get Y, bundle price, tiered spend,
+bank/MFS card offers, coupon codes
+• Scheduled campaigns [MVP]: Eid, Boishakh, Black Friday/ll.ll, end-of-season sale
+• Markdown management [P2]: planned markdowns by style age; Al-recommended
+markdowns [P3]
+• Price change audit trail [MVP]
+4.13 Accounting & Finance
+• Core ledger [MVP basic I P2 full]: chart of accounts, journals, cash/bank/MFS accounts
+• Receivables/payables [MVP]: customer dues (B2B/wholesale), supplier dues
+• Expenses [MVP]: rent, utilities, salaries, marketing (Facebook ad spend)
+• Daily outlet and gross margin by style [MVP]
+• Bank/MFS reconciliation [P2]; exports [P2]: Tally-style/Excel exports for external
+accountants
+=== page-18.png ===
+4.14 VATITax Compliance (NBR)
+• VAT configuration [MVP]: rate per category (default 7.5% for apparel sellers,
+configurable), VAT-inclusive MRP handling, BIN storage
+• Mushak outputs [MVP]: 6.3 at POS, 6.5 transfers, 6.7 credit notes
+• Registers [P2]: 6.1, 6.2, 62.1, 6.10; VDS (6.6) records for corporate customers
+• Return support [P2]: Mushak 9.1 data pack / export for e-VAT
+• EFD/SDC & e-invoice adapter [P2]: interface layer for Genex SDC/EFDMS integration and
+future NBR e-invoice APIs
+• NBR enlistment or VAT-vendor partnership [P3]; manufacturer forms [P3]: 4.3, 6.4
+4.15 HR, Staff & Commission
+• Staff profiles [MVP]: roles, outlets, PIN login
+• Attendance & shifts [P2]: mobile/biometric attendance, shift roster
+• Sales commission [MVP basic I P2 advanced]: by salesperson, category, target slabs,
+festival bonuses
+• Payroll-lite [P3] or integration with HR software; Al shift scheduling [P3] (see 55)
+4.16 Reporting & Analytics
+Operational dashboards [MVP]: sales today/MTD by outlet/channel, top styles, low stock,
+pending orders, COD outstanding
+• Merchandise reports [MVP]: sell-through %, stock cover (weeks), size/color sales matrix,
+ageing stock
+• Financial reports [MVP]: gross margin by stylelcategory/outlet, discount impact
+• Season reports [P2]: season-vs-season, festival comparison, full-price vs markdown sell-
+through
+• Staff reports [MVP]: sales by salesperson, returns by cashier
+• Scheduled email/WhatsApp reports [P2]; Bl export/APl [P3]
+4.17 User Roles & Permissions
+• Role templates [MVP]: Owner, Admin, Outlet Manager, Cashier, Warehouse, Online Order
+Agent, Accountant, Merchandiser, Production Manager
+• Granular permissions [MVP]: discount limits, price override, return approvals, cost-price
+visibility, report access, outlet scoping, audit logs
+4.18 Multi-Branch & Franchise
+• Mufti-outlet central control [MVP]: central catalog and price, outlet overrides
+• Franchise/dealer mode [P3]: franchisee stock ownership, wholesale invoicing to
+franchisee, royalty/commission settlement, franchise-only reports
+• Mufti-company [P3]: brand groups with separate legal entities and BINS
+=== page-19.png ===
+4.19 Mobile Apps
+• Owner app [MVP]: dashboards, approvals, Bangla Al assistant
+• Staff/warehouse app [MVP]: scanning, counts, transfers, GRN; Android POS [MVP]:
+tablet/phone checkout
+• Order agent app [P2]: Messenger orders and confirmation calls
+4.20 Notifications
+• Alerts [MVP]: low stock, transfer pending, high-value discount used, cash variance, COD
+overdue
+• Customer notifications [MVP]: order confirmation, shipping/tracking, delivery, receipt
+(SMS/WhatsApp)
+Digest [P2]: daily owner summary in Bangla
+4.21 Integrations & API
+• Payments [MVP]: bKash, Nagad, SSLCommerz (cards and wallets); Rocket/Upay [P2]
+• Couriers [MVP]: Pathao, Steadfast, RedX; [P2] Paperfly, Carrybee, eCourier
+• Commerce [MVP/P2]: Meta Catalog/Messenger/lnstagram, WhatsApp Business,
+WooCommerce, Shopify, Daraz
+• SMS gateways [MVP]; email
+• Accounting/VAT partners [P2]: export to enlisted VAT software (e.g., Uddogi, Prime VAT,
+VATPro) until own enlistment
+• Public REST API + webhooks [P2]; Zapier/Make-style connectors [P3]
+4.22 Localization
+• Language [MVP]: full Bangla/English IJI toggle, Bangla product names, Bangla receipts,
+Bangla numerals optional
+• Currency & formats [MVP]: BDT with lakh/crore formatting, Bangladesh time zone, Bengali
+and Gregorian calendar display
+• Festival calendar [MVP]: Eid (moving lunar dates), Puja, Boishakh, Victory Day, Falgun,
+winter
+4.23 Security & Backup
+• Auth [MVP]: 2FA for owners, staff PINS, device binding for POS
+• Data protection [MVP]: encryption in transit/at rest, tenant isolation, role-based masking
+of cost prices
+• Backup [MVP]: automated daily backups, point-in-time restore, customer data export
+Compliance [P3]: alignment with Bangladesh's emerging personal-data protection rules;
+audit log retention
+4.24 Subscription I SaaS Administration
+• Plans & billing [MVP]: per-outlet plans, add-ons, trials, bKashlNagad recurring or manual
+=== page-20.png ===
+renewal, VAT invoices for subscribers
+• Tenant admin [MVP]: onboarding wizard, data import, usage metering (outlets, users,
+SKUs, orders, Al credits)
+• Reseller/partner portal [P3]: for local implementers and hardware dealers
+• Support [MVP]: in-app chat, WhatsApp support, knowledge base in Bangla
+5. AI Use Cases
+5.1 Who already offers what
+Al capability
+Demand forecasting,
+allocation, replenishment,
+rebalancing
+Size-curve optimization
+Promo/markdown
+recommendations
+Who offers it today (from research)
+Nextail ("Machine Learning demand forecasting for fashion"
+initial allocation, replenishment, rebalancing); Toolio ("Al and
+statistical forecasting... at the SKU x location level"); Cin7
+(ForesightAl); Ginesys.Al agents
+Toolio ("Al to generate size curves by location"); Nextail (size
+curve coherence in optimization)
+ooli
+7
+Toolio (recommends "a discount and expected lift based on
+historical promotional performance"); Nextail positions
+markdowns as a "last resort" via rebalancing
+ooli
+7
+Hishabee ERP (Bangla/English Al assistant on live data);
+ishabe
+Natural-language business n
+COD fraud/order
+confirmation
+Local apparel POS
+(Mediasoft, PridePOS, E-
+hishab, etc.)
+Ginesys.Al; Shopify sidekick
+ishabee
+Dakio ("Al calls to confirm risky COD orders"); EcomDrive "Al
+agents"; Storea "fraud checks"
+No AI features found publicly
+=== page-21.png ===
+5.2 Use-case detail
+Use case
+Fashion trend
+detection &
+prediction
+How it works in this
+product
+Scores rising/falling
+attributes (colors,
+prints, silhouettes,
+Techniques I
+models
+fabrics) from own Time-series trend
+sales velocity,
+detection; CLIP-
+Facebook/lnstagram style image
+engagement,
+embeddings for
+Google Trends for attributes; topic
+Bangla/English
+keywords (e.g.,
+"jamdani saree",
+clustering of
+Data required
+Product images &
+attributes, sales
+history, Meta
+Page/lG insights,
+Google Trends,
+captionslcomments;
+festival calendar
+gradient-boosted
+(e
+sii
+"Eid panjabi") and ranking
+competitor catalog
+snapshots, ahead of
+buy planning.
+Forecasts at style-
+color level, then
+disaggregates to
+sizes and outlets,
+with regressors for
+Festival & seasonal
+moving Eid dates,
+demand forecasting
+2
+Puja, Boishakh,
+by
+winter onset, salary
+style/size/color/outlet
+Hierarchical
+forecasting
+year of
+(LightGBM/global
+transactions (ideally P'
+models; N-
+BEATS/TFT later);
+2 festival cycles),
+stock-outs,
+3 Automated
+replenishment &
+reorder scheduling
+days and promos.
+New styles get
+"similar style"
+attribute-based
+forecasts.
+Daily suggested
+orders for core
+items (e.g., plain t-
+shirts, panjabi
+pajamas) and
+warehouse transfer
+suggestions,
+respecting
+analog forecasting
+prices/promos,
+for new items;
+calendar
+hierarchy
+reconciliation
+(s, S) I min-max with Forecasts, lead
+forecast-driven
+times, MOQ, open
+(t
+m
+re
+safety stock;
+service-level
+optimization; simple
+MILPfor
+constrained
+budgets
+POs, current stock
+=== page-22.png ===
+Use case
+Size-curve
+4
+optimization
+How it works in this
+product
+supplier/CMT lead
+times and pre-
+festival cut-off
+dates.
+Learns true size
+demand per
+category per outlet
+Techniques I
+models
+Data required
+(e.g., Chattogram Bayesian
+Size-level sales, size-
+outlets skew L/XL in hierarchical models;
+men's panjabi),
+corrected for stock- correction;
+outs. Feeds PO
+quantity splits,
+production cut
+ratios and
+allocations.
+Initial allocation of a
+new drop across
+outlets and online;
+weekly rebalancing
+that moves broken
+censored-demand
+availability history,
+returns for fit
+clustering of outlets
+by size profile
+Prescriptive
+optimization
+reasons
+Forecasts by outlet,
+Inventory allocation &
+size runs to where
+5 rebalancing across
+they sell, weighing
+outlets
+transfer cost
+against full-price
+sell-through
+probability. e
+Recommends when
+and how deep to
+discount each style
+(e.g., after Eid, end
+Markdown I dynamic
+of winter), and
+6
+pricing optimization
+simulates scenarios
+("20% vs off
+from day 3 after
+Eid").
+(MILP/heuristics) on stock, transfer
+top of forecasts, the costs, display
+Nextail pattern
+scaled down
+Price-elasticity
+estimation
+(hierarchical
+minimums
+Price history, promo
+Bayesian or GBM history, sell-through
+with price features); curves, remaining
+(c
+ru
+m
+markdown
+optimization via
+dynamic
+programming
+weeks in season,
+stock
+=== page-23.png ===
+Use case
+Dead-stock & slow
+7
+mover detection
+How it works in this
+product
+Flags styles/sizes
+with low sell-
+through vs cohort,
+high weeks-of-
+cover or ageing;
+suggests actions:
+transfer, bundle,
+markdown, online-
+only push, return to
+vendor.
+Forecasts
+transactions by
+hour and day
+(festival evenings,
+Fridays) and
+8 Staff/shift scheduling
+proposes rosters
+per outlet
+respecting staff
+availability and
+labour rules.
+Batches online
+orders for pickup
+cut-offs, selects
+Delivery scheduling & courier by area
+9
+courier selection
+IO Natural-language
+querying & data
+analysis
+(Bangla/English)
+success
+rate/cost/SLA,
+predicts return risk
+per order.
+Owner asks "5ß5
+("how are
+panjabi sales this
+Eid compared with
+last Eid?" ) or
+"Which outlet has
+excess XL stock?"
+Techniques I
+models
+Cohort
+benchmarking,
+survival analysis of
+time-to-sell, simple
+classifiers
+Hourly demand
+forecasting;
+constraint
+programming (e.g.,
+OR-Tools) for
+rostering
+Classification
+(return/RTO risk),
+rules + optimization
+for courier choice
+LLM with text-to-
+SQL over a
+governed semantic
+layer (metrics
+catalog); guardrails
+for row-level
+security
+Data required
+Stock ageing, sales
+velocity, receipts
+POS timestamps,
+(optional) footfall
+counters, staff
+availability
+Order, address/area,
+courier outcome
+history, COD amount
+Clean data
+warehouse/semantic (c
+model; role
+permissions
+=== page-24.png ===
+How it works in this
+Use case
+product
+and gets
+permission-scoped
+tables/charts plus a
+narrative.
+RFM segments,
+festival shoppers vs
+year-round, size-
+profile segments,
+Techniques I
+models
+RFX,.I, k-
+means/GMM
+Customer demand &
+11
+segmentation
+Personalized
+12
+recommendations
+Visual search &
+clustering, churn
+online-only vs store;
+classifiers
+churn risk; targeted
+Eid campaigns.
+"Complete the look"
+Item-item co-
+(panjabi + koti +
+purchase,
+pajama), size-aware
+Data required
+Phone-linked
+customer
+transactions across
+channels
+Basket data, product
+embeddings, image
+images/attributes,
+suggestions on
+similarity; later two-
+website/Messenger
+tower
+replies, cashier
+recommenders
+upsell prompts.
+Upload a photo to
+auto-suggest
+category, color,
+Vision-language
+pattern, sleeve and
+models
+neckline plus
+(CLIP/SigLlP-style
+13 image-based product Bangla/English
+tagging
+embeddings,
+Facebook
+multimodal LLMs);
+descriptions; search
+customer history
+Product images
+(clean, consistent)
+pos logs (voids,
+discounts, returns),
+counts, order
+outcomes
+ar
+the catalog by
+photo ("find
+similar") •
+14 Sales anomaly, fraud Flags unusual voids,
+& shrinkage detection refunds, discounts
+by cashier,
+exchange abuse,
+count variances,
+abnormal outlet
+shrinkage, and
+suspicious COD
+vector search
+Isolation
+forest/robust z-
+scores on cashier-
+level KPIs; rules;
+graph links between
+phone
+numbers/addresses
+=== page-25.png ===
+How it works in this
+Use case
+product
+patterns (repeat no-
+shows).
+Techniques I
+models
+Data required
+5.3 Data foundations (prerequisite for all Al)
+• Event-level transaction logging (every scan, void, discount, transfer) with outlet, staff and
+timestamp.
+• Stock-out history by SKU-location-day, so forecasts learn true demand rather than
+censored sales.
+• Clean attribute taxonomy (fabric, color family, pattern, fit, occasion), backfilled byAl image
+tagging.
+• Festival calendar table with moving Eid/Puja dates and "days-to-festival" features.
+• A metrics/semantic layer (sell-through, weeks of cover, GMROI) shared by dashboards and
+the Al assistant.
+5.4 Phased AI roadmap
+Phase Timing
+AI deliverables
+Rules-based reorder points & low-stock alerts;
+Why this order
+Cheap to build,
+dead-stock/slow-mover scoring; Bangla/English
+Months
+immediately visible to
+MVP
+0-6
+Al assistant on curated metrics; rules-based fraud
+owners, works with
+alerts (voids/discounts); Al product captions in
+little history
+Bangla/English for Facebook
+Festival-aware demand forecasting (style-color-
+Needs 6-12 months of
+outlet); forecast-driven replenishment; size
+clean data from MVP
+Phase Months curves by outlet; rules/heuristic allocation &
+customers; directly
+2
+6-12
+rebalancing; image auto-tagging; COD return-risk
+reduces stock-outs and
+scoring; RFM segmentation; co-purchase
+dead stock
+recommendations
+Markdown optimization & price elasticity;
+Requires mufti-season
+optimizer-based allocation; staff rostering; trend
+Phase Months
+data, more engineering,
+detection using external signals; visual search; Al
+3
+12-24
+and proof of ROI from
+confirmation calls for COD; open-ended text-to-
+Phase 2
+SQL analyst
+=== page-26.png ===
+6. Pricing Strategy for Bangladesh
+6.1 Competitor price anchors
+The local and international price points in 51.2 and 52 set the bounds. Locally, micro tools
+run iO-i750/month (Hisabe adds a t15,OOO access fee), small-shop SaaS runs t15,OOO-
+t36,OOO/year (Zaman IT), and multi-branch cloud POS runs plus
+installation
+Internationally, per-location fashion POS starts at (Lightspeed) and
+Cin7 core at =
+6.2 Recommended pricing model
+Principles
+• Per-outlet monthly pricing in BDT, with no mandatory installation fee. E-hishab's i15k-
+80k setup and Hisabe's i15k access fee are friction points you can attack.EbjE6@
+isab
+Charge optional paid onboarding instead.
+• Don't cap SKUs harshly. Variant counts explode in apparel. Cap by outlets, users and
+online orders instead.
+• Annual prepay discount (pay 10 months, get 12). This fits the Bangladeshi preference for
+yearly payment that Zaman IT exploits.
+• Payment via bKash/Nagad/bank, with VAT-compliant invoices to subscribers.
+• Festival-friendly terms: allow temporary extra POS terminals/users during Eid months
+(e.g., i300/terminal/month), because peak-season capacity is the real need.
+Suggested tiers (estimates; validate with 15-20 brand interviews)
+=== page-27.png ===
+Monthly
+Tier
+(BDT)
+Starter (F-
+commerce)
+Annual
+(BDT)
+Included
+1 location, 2 users, variant
+matrix, up to -150 online
+orders/mo, 1 courier, basic
+reports
+Target
+Facebook/lnstagram-
+first brands;
+acquisition funnel
+Boutique
+Brand
+Chain
+il,500
+i3,500 (incl.
+up to 3
+outlets)
+9,000 per
+outlet (min. 4
+outlets) +
+t3,ooo HQ
+1 outlet + online, 5 users, POS
+(offline), all couriers,
+Single-store brands,
+bKash/Nagad, barcode labels,
+boutiques
+Mushak 6.3, Al assistant (limited
+credits)
+Warehouse + 3 outlets, 15 users,
+transfers with Mushak 6.5,
+Growing 2-5 outlet
+t35,OOO loyalty, promotions engine,
+brands
+commissions, dead-stock Al,
+WooCommerce/Shopify sync
+Unlimited users, approvals, Al
+Custom forecasting/replenishment/size 5-30 outlet chains (Le
+annual curves, allocation suggestions, Reve/Cats Eye scale)
+API access, priority support
+Production/CMT, franchise,
+Large brands
+Custom (from
+multi-company, SDC/e-invoice
+(Aarong/Yellow/Sailor
+Enterprise
+Custom
+-i50,OOO/mo)
+integration, SLA, dedicated
+scale)
+success manager
+Add-ons: Production & CMT module advanced Al pack (markdown
+optimization, allocation optimizer, visual search) or credit-based; Mushak
+registers + 9.1 export / SDC adapter SMS/WhatsApp bundles at cost-
+plus; hardware bundles via dealers; paid onboarding/migration
+Why this works
+• A 3-outlet brand pays —i35,OOO/yr, comparable to Zaman IT Enterprise 636,000/yr) and
+below E-hishab Platinum's i36,OOO/yr plus i30,OOO installation, while getting apparel depth,
+omnichannel and
+7
+aman-i
+• The same brand on Shopify (Basic + 3 x POS Pro) would pay about $306/mo (z
+more than IOX this price.
+=== page-28.png ===
+• The free Starter tier competes with Banikh, the Hishabee app and TallyKhata for Facebook
+sellers and builds the data the Al needs.
+Recommendations
+1. Pick the beachhead: Dhaka/Chattogram apparel brands with 1-10 outlets plus a
+Facebook page. They feel both pains (store + online stock) and are underserved by both
+camps.
+2. Win on three "wow" moments in demos: (a) create a style with a 4x6 matrix and print 24
+barcodes in under 2 minutes; (b) confirm a Messenger order and watch stock reserve at
+the outlet, then book Steadfast in one click; (c) ask the Bangla Al
+kC4?" ("which sizes need reordering?" ) and get an answer.
+3. Treat compliance as architecture, not a module. Store BIN, HSIservice codes and VAT
+category on every item and invoice, and generate Mushak 6.3/6.5/6.7 from day one. Partner
+with an NBR-enlisted VAT vendor (Uddogi, Prime VAT, VATPro, etc.) before seeking your
+own enlistment, and track the e-VAT/e-invoice transition closely.
+4. Instrument for Al from the first customer. Log stock-outs, voids and price changes, and
+enforce attribute taxonomy. Forecasting value in Phase 2 depends on this.
+5. Go-to-market: fashion-entrepreneur Facebook groups, courier merchant programs
+(Pathao/Steadfast), hardware dealers and e-CAB/BASIS events, with free migration from
+Excel and local POS tools before Eid, when pain peaks,
+6. Validate unknowns quickly: interview IT/ops leads at 5-10 known brands to learn their
+current POSIERP, which public data does not show.
+Caveats
+• Brand-system usage is unverified. No primary sources were found confirming Which
+POSIERP Aarong, Yellow, Sailor, Richman/lnfinity, Easy, Cats Eye, Le Reve or Lubnan use.
+• Several brief names were not verified as relevant apparel POS products: Ezzy POS,
+Retailrr, Zaynax, Bdtask, Softwind, Datasoft, Shopup/Mokam,
+• Many local prices come from vendor pages or marketplace listings (BDStall, Bikroy) and
+may be promotional, outdated or negotiable. Mediasoft, PridePOS, AmarSolution, Hishabee
+ERP and TallyKhata premium prices are not published. Vendor "top 10" articles (e.g., by
+Pridesys, Mediasoft, 3S Softech) are self-promotional.
+• International prices vary by source, region and billing term (e.g., Cin7 Advanced $999 vs
+$1,199; Square Plus $49-$89; Odoo promo vs renewal and regional rates). USD-->BDT
+conversions (-t122/$) are approximate.
+• VAT rules are in flux. The 7.5% apparel rate, the EFD/SDC mandate and e-invoicing rules
+(Finance Bill 2026 language is "may be made mandatory") should be re-verified with a VAT
+consultant against current SROs before
+=== page-29.png ===
+• Market-size figures (e.g., the Pathao Commerce launch press release's "200,000
+merchants" and "over 80% of all digital commerce" for social commerce) are company
+claims, not independent statistics.
+• Suggested prices and Al timelines are estimates for planning and should be validated
+through customer discovery and pilot pricing.

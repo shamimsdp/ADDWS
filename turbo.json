@@ -1,0 +1,86 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalDependencies": ["tsconfig.base.json", "eslint.config.mjs", ".prettierrc.json"],
+  "globalEnv": ["NODE_ENV"],
+  "globalPassThroughEnv": ["CI", "TZ", "PRISMA_HIDE_UPDATE_MESSAGE"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "db:generate"],
+      "inputs": ["$TURBO_DEFAULT$", "!.env*", ".env.example"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "lint": {
+      "dependsOn": ["^build", "db:generate"],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "db:generate"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build", "db:generate"],
+      "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "dependsOn": ["^build", "db:generate"],
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "DIRECT_URL",
+        "DB_TARGET",
+        "NEON_BRANCH_ID",
+        "NEON_MAIN_BRANCH_ID",
+        "ALLOW_DEV_TENANT_HEADER",
+        "INTEGRATION_ENCRYPTION_KEY",
+        "INTERNAL_JOBS_SECRET"
+      ]
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "ALLOW_DEV_TENANT_HEADER",
+        "INTEGRATION_ENCRYPTION_KEY",
+        "INTERNAL_JOBS_SECRET"
+      ]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate:dev": {
+      "cache": false,
+      "interactive": true,
+      "env": ["DATABASE_URL", "DIRECT_URL", "IMS_ENV_FILE"]
+    },
+    "db:migrate:deploy": {
+      "cache": false,
+      "env": ["DATABASE_URL", "DIRECT_URL", "IMS_ENV_FILE"]
+    },
+    "db:status": {
+      "cache": false,
+      "env": ["DATABASE_URL", "DIRECT_URL", "IMS_ENV_FILE"]
+    },
+    "db:drift": {
+      "cache": false,
+      "env": ["DATABASE_URL", "DIRECT_URL", "IMS_ENV_FILE"]
+    },
+    "db:seed": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "DIRECT_URL",
+        "IMS_ENV_FILE",
+        "DB_TARGET",
+        "NEON_BRANCH_ID",
+        "NEON_MAIN_BRANCH_ID"
+      ]
+    }
+  }
+}
