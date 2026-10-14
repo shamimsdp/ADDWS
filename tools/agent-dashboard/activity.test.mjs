@@ -23,7 +23,12 @@ test('activity uses observed tools and explicit reports, never task descriptions
 });
 
 test('Claude tool start is classified but tool completion does not claim continued execution', () => {
-  const input = { session_id: 'test', tool_name: 'Read', hook_event_name: 'PreToolUse' };
+  const input = {
+    session_id: 'test',
+    agent_type: 'minhaj-project-manager',
+    tool_name: 'Read',
+    hook_event_name: 'PreToolUse',
+  };
   assert.equal(activityOf(hookEvent(input)), 'reading');
   assert.equal(activityOf(hookEvent({ ...input, hook_event_name: 'PostToolUse' })), 'working');
 });

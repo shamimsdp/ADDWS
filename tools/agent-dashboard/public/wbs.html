@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>WBS · Inventory management</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/wbs.css" />
+    <link rel="stylesheet" href="/theme.css" />
+    <script src="/wbs.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to work breakdown</a>
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <a class="brand" href="/"
+        ><span class="brand-mark" aria-hidden="true">a<span>·</span></span
+        ><span>agent<span class="brand-sub">workspace</span></span></a
+      >
+      <div class="workspace-label">DEVELOPER TOOLS</div>
+      <nav>
+        <a class="nav-link" href="/#agents"><span aria-hidden="true">◈</span> Mission control</a
+        ><a class="nav-link" href="/#activity"><span aria-hidden="true">≋</span> Activity feed</a
+        ><a class="nav-link" href="/#project"><span aria-hidden="true">▤</span> Project progress</a
+        ><a class="nav-link selected" href="/wbs" aria-current="page"
+          ><span aria-hidden="true">☷</span> WBS</a
+        >
+      </nav>
+      <div class="sidebar-note">
+        <span class="local-dot" aria-hidden="true"></span> Local workspace
+        <p>One team. A shared view.</p>
+        <small>Read-only · Loopback only</small>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div><span class="breadcrumb">Workspace /</span> Work breakdown structure</div>
+        <div class="connection" id="connection" role="status">
+          <span class="connection-dot" aria-hidden="true"></span
+          ><span id="connection-label">Loading…</span>
+        </div>
+      </header>
+      <main id="main">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">FEATURE PROGRESS LIST</p>
+            <h1>Work breakdown<span>.</span></h1>
+            <p class="intro">
+              Every stage, feature and sub-feature with layer status and hour estimates.
+            </p>
+          </div>
+          <div class="project-chip">
+            <span class="project-icon" aria-hidden="true">⚙</span>
+            <div><small>DELIVERY MODE</small><strong id="wbs-mode">—</strong></div>
+          </div>
+        </div>
+        <div id="wbs-error" class="notice" role="alert" hidden>
+          Could not load the feature progress list. Retrying automatically.
+        </div>
+        <section class="metrics wbs-metrics" aria-label="Work breakdown totals">
+          <div>
+            <span class="metric-icon lime" aria-hidden="true">✓</span>
+            <div><strong id="wbs-done">—</strong><span>Sub-features done</span></div>
+          </div>
+          <div>
+            <span class="metric-icon blue" aria-hidden="true">⚙</span>
+            <div><strong id="wbs-agent">—</strong><span>Agent hours · remaining</span></div>
+          </div>
+          <div id="wbs-human-metric">
+            <span class="metric-icon purple" aria-hidden="true">◉</span>
+            <div><strong id="wbs-human">—</strong><span>Human review hours · remaining</span></div>
+          </div>
+          <div>
+            <span class="metric-icon neutral" aria-hidden="true">⊘</span>
+            <div><strong id="wbs-blocked">—</strong><span>Blocked · in review</span></div>
+          </div>
+        </section>
+        <section class="panel wbs-filters" aria-label="Filter work breakdown">
+          <label
+            >Stage<select id="stage-filter">
+              <option value="all">All stages</option>
+            </select></label
+          ><label
+            >Status<select id="status-filter">
+              <option value="all">All statuses</option>
+              <option value="open">Not done</option>
+              <option value="Todo">Todo</option>
+              <option value="Blocked">Blocked</option>
+              <option value="active">In progress</option>
+              <option value="Review">Awaiting human review</option>
+              <option value="Done">Done</option>
+            </select></label
+          ><label class="wbs-search"
+            >Search<input id="search" type="search" placeholder="ID or name" autocomplete="off"
+          /></label>
+          <div class="wbs-actions">
+            <button id="expand-all" type="button">Expand all</button
+            ><button id="collapse-all" type="button">Collapse all</button>
+          </div>
+        </section>
+        <div id="wbs-tree" class="wbs-tree" aria-live="polite"></div>
+        <p id="wbs-empty" class="empty" hidden>No sub-features match these filters.</p>
+        <footer>
+          <span>Source · context/feature-progress-list.md</span
+          ><span id="wbs-time">Waiting for first load</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

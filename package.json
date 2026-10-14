@@ -25,6 +25,8 @@
     "db:drift": "turbo run db:drift",
     "db:seed": "turbo run db:seed",
     "queue": "node scripts/feature-queue.mjs",
+    "delivery:mode": "node scripts/delivery-mode.mjs",
+    "test:delivery": "node --test scripts/delivery.test.mjs",
     "agents:dashboard": "node tools/agent-dashboard/server.mjs",
     "agents:report": "node tools/agent-dashboard/report.mjs",
     "agents:test": "node --test tools/agent-dashboard/*.test.mjs"

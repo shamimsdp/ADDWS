@@ -463,7 +463,7 @@ Depends on: FEAT-031 · Blocked by: —
 |---|---|---|---|
 | FEAT-038.1 | Integration health dashboard | Lag, failures, last sync |
 | FEAT-038.2 | Failed event list and replay | |
-| FEAT-038.3 | Stock drift reconciliation | Compare channel stock vs system |
+| FEAT-038.3 | Stock drift reconciliation | Compare channel stock vs system. Deferred by user decision (2026-10-14) until FEAT-032 ships; do not assign before then |
 
 ---
 

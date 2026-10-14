@@ -10,462 +10,476 @@ Feature definitions: `feature-list.md`. What to do next: `feature-queue.md`. Act
 | `Todo` | Not started |
 | `Blocked` | Waiting on an open decision (D-xx in `feature-list.md`) |
 | `In progress` | Work started in this layer |
-| `Done` | Layer finished and handed off |
+| `Review` | Agent finished; waiting for human review/verification (agent-human-review mode only) |
+| `Done` | Layer finished (and human-verified in agent-human-review mode) and handed off |
 | `N/A` | Layer not needed (BE-only / FE-only) |
 | `Bug` | Open bug in this layer (see Bugs column) |
 
 Overall **Status** values: `Todo`, `Blocked`, `Requirements` (Minhaj reviewing / waiting for user answers), `Backend`, `Frontend`, `QA`, `Bug fix`, `Done`. The queue script treats `Requirements`, `Backend`, `Frontend`, `QA` and `Bug fix` as in progress.
 A sub-feature is `Done` only when QA = `Done` and Bugs is empty. A feature is `Done` when all its sub-features are `Done`.
 
+## Delivery mode and estimates
+
+Mode is set in `context/delivery-config.json` and switched with `node scripts/delivery-mode.mjs <agent-human-review|fully-agentic>`, which also rewrites the estimate columns below. Current default: **agent-human-review**.
+
+| Mode | Estimate columns per sub-feature |
+|---|---|
+| `agent-human-review` | Agent effort and human review/verify effort per layer: `PM agent`, `PM verify`, `BE agent`, `BE verify`, `FE agent`, `FE verify`, `QA agent`, `QA verify` |
+| `fully-agentic` | Agent effort only: `PM agent`, `BE agent`, `FE agent`, `QA agent` |
+
+All estimates are in hours; `—` means the layer is N/A. **Agent** columns cover the agent's full work for that layer: PM = requirement review, gap list and assignment; BE = schema/migration, endpoints, business logic and Vitest tests; FE = pages, API integration and Playwright specs; QA = independent acceptance and regression pass with the bug report. **Verify** columns cover the human reviewer: PM = approve requirements and scope; BE/FE = code review and local verification; QA = sign-off on the QA report.
+
+Baseline (normal risk): PM 0.25 / 0.25, BE 1.5 / 0.5, FE 1.5 / 0.5, QA 0.75 / 0.25 (agent / verify), QA agent +0.25 when both BE and FE change. High-risk Deep-lane areas (auth, access, tenancy, migrations, money, stock posting, concurrency, sync) take 1.5×. Baselines are generated for missing cells by `node scripts/delivery-mode.mjs --sync`; Minhaj replaces them with feature-specific estimates during requirement review. A new sub-feature row may leave estimate cells blank and run `--sync`. The Summary `Agent h` / `Human h` totals come from these columns.
+
 ## Summary
 
-| Stage | Features | Sub-features | Done | In progress | Blocked |
-|---|---|---|---|---|---|
-| Stage 0 — Setup | 1 | 7 | 7 | 0 | 0 |
-| Stage 1 — Foundation | 11 | 46 | 10 | 0 | 1 |
-| Stage 2 — Inventory and procurement | 10 | 39 | 0 | 0 | 9 |
-| Stage 3 — Store retail | 9 | 36 | 0 | 0 | 17 |
-| Stage 4 — Automated online operations | 8 | 33 | 6 | 0 | 21 |
-| Stage 5 — Pilot readiness | 7 | 24 | 0 | 0 | 1 |
-| Stage 6 — Developer tooling | 1 | 3 | 3 | 0 | 0 |
-| **Total** | **47** | **188** | **26** | **0** | **49** |
+| Stage | Features | Sub-features | Done | In progress | Blocked | Agent h | Human h |
+|---|---|---|---|---|---|---|---|
+| Stage 0 — Setup | 1 | 7 | 7 | 0 | 0 | 19.25 | 7.5 |
+| Stage 1 — Foundation | 11 | 46 | 10 | 4 | 1 | 227 | 83 |
+| Stage 2 — Inventory and procurement | 10 | 39 | 0 | 0 | 9 | 208 | 80 |
+| Stage 3 — Store retail | 9 | 36 | 0 | 5 | 17 | 222 | 81.25 |
+| Stage 4 — Automated online operations | 8 | 33 | 6 | 3 | 21 | 168.5 | 62.5 |
+| Stage 5 — Pilot readiness | 7 | 24 | 0 | 6 | 1 | 130 | 47.75 |
+| Stage 6 — Developer tooling | 1 | 3 | 3 | 0 | 0 | 9.25 | 3.5 |
+| **Total** | **47** | **188** | **26** | **18** | **49** | **984** | **365.5** |
 
 ## Stage 0 — Setup
 
 ### FEAT-000 Project setup — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-000.1 | Monorepo scaffold | Done | Done | N/A | Done | — | 2026-10-12 Minhaj |
-| FEAT-000.2 | NestJS API skeleton | Done | Done | N/A | Done | — | 2026-10-12 Minhaj |
-| FEAT-000.3 | Prisma + Neon setup | Done | Done | N/A | Done | — | 2026-10-12 Minhaj |
-| FEAT-000.4 | Vitest setup | Done | Done | N/A | Done | — | 2026-10-12 Minhaj |
-| FEAT-000.5 | Next.js web skeleton | Done | N/A | Done | Done | — | 2026-10-12 Minhaj |
-| FEAT-000.6 | Playwright setup | Done | N/A | Done | Done | — | 2026-10-12 Minhaj |
-| FEAT-000.7 | CI pipeline | Done | Done | Done | Done | — | 2026-10-12 Minhaj |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-000.1 | Monorepo scaffold | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Minhaj |
+| FEAT-000.2 | NestJS API skeleton | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Minhaj |
+| FEAT-000.3 | Prisma + Neon setup | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Minhaj |
+| FEAT-000.4 | Vitest setup | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Minhaj |
+| FEAT-000.5 | Next.js web skeleton | Done | N/A | Done | Done | — | 0.25 | 0.25 | — | — | 1.5 | 0.5 | 0.75 | 0.25 | 2026-10-12 Minhaj |
+| FEAT-000.6 | Playwright setup | Done | N/A | Done | Done | — | 0.25 | 0.25 | — | — | 1.5 | 0.5 | 0.75 | 0.25 | 2026-10-12 Minhaj |
+| FEAT-000.7 | CI pipeline | Done | Done | Done | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | 2026-10-12 Minhaj |
 
 ## Stage 1 — Foundation
 
 ### FEAT-001 Tenancy and organization — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-001.1 | Tenant model and isolation | Done | Done | Done | Done | — | 2026-10-12 Codex |
-| FEAT-001.2 | Legal entity | Done | Done | Done | Done | — | 2026-10-12 Codex |
-| FEAT-001.3 | Brands | Done | Done | Done | Done | — | 2026-10-12 Codex |
-| FEAT-001.4 | Locations | Done | Done | Done | Done | — | 2026-10-12 Codex |
-| FEAT-001.5 | Tenant settings | Done | Done | Done | Done | — | 2026-10-12 Codex |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-001.1 | Tenant model and isolation | Done | Done | Done | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-12 Codex |
+| FEAT-001.2 | Legal entity | Done | Done | Done | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | 2026-10-12 Codex |
+| FEAT-001.3 | Brands | Done | Done | Done | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | 2026-10-12 Codex |
+| FEAT-001.4 | Locations | Done | Done | Done | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | 2026-10-12 Codex |
+| FEAT-001.5 | Tenant settings | Done | Done | Done | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-12 Codex |
 
 ### FEAT-002 Authentication and user management — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-002.1 | Sign-in / sign-out / sessions | Done | Done | Done | Done | — | 2026-10-13 Codex |
-| FEAT-002.2 | Password reset and email verification | Done | Done | Done | Done | — | 2026-10-13 Codex |
-| FEAT-002.3 | User invitation and deactivation | Done | Done | Done | Done | — | 2026-10-13 Codex |
-| FEAT-002.4 | Mandatory MFA for owner/admin | Done | Done | Done | Done | — | 2026-10-13 Codex |
-| FEAT-002.5 | Device / register sign-in for POS | Done | Done | Done | Done | — | 2026-10-13 Codex |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-002.1 | Sign-in / sign-out / sessions | Done | Done | Done | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Codex |
+| FEAT-002.2 | Password reset and email verification | Done | Done | Done | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Codex |
+| FEAT-002.3 | User invitation and deactivation | Done | Done | Done | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Codex |
+| FEAT-002.4 | Mandatory MFA for owner/admin | Done | Done | Done | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Codex |
+| FEAT-002.5 | Device / register sign-in for POS | Done | Done | Done | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Codex |
 
 ### FEAT-003 Roles and permissions — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-003.1 | Predefined roles | In progress | In progress | In progress | In progress | — | 2026-10-13 Codex |
-| FEAT-003.2 | Permission guards | In progress | In progress | In progress | In progress | — | 2026-10-13 Codex |
-| FEAT-003.3 | Location scoping | In progress | In progress | In progress | In progress | — | 2026-10-13 Codex |
-| FEAT-003.4 | Cost visibility permission | In progress | In progress | In progress | In progress | — | 2026-10-13 Codex |
-| FEAT-003.5 | Custom roles (P1) | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-003.1 | Predefined roles | QA | Review | Review | In progress | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Minhaj |
+| FEAT-003.2 | Permission guards | QA | Review | Review | In progress | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Minhaj |
+| FEAT-003.3 | Location scoping | QA | Review | Review | In progress | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Minhaj |
+| FEAT-003.4 | Cost visibility permission | QA | Review | Review | In progress | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | 2026-10-13 Minhaj |
+| FEAT-003.5 | Custom roles (P1) | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-004 Audit log — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-004.1 | Audit event recording | Todo | Todo | Todo | Todo | — | — |
-| FEAT-004.2 | Audit viewer | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-004.1 | Audit event recording | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-004.2 | Audit viewer | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-005 Catalog masters — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-005.1 | Size master and size groups | Todo | Todo | Todo | Todo | — | — |
-| FEAT-005.2 | Color master | Todo | Todo | Todo | Todo | — | — |
-| FEAT-005.3 | Categories / departments | Todo | Todo | Todo | Todo | — | — |
-| FEAT-005.4 | Season and collection | Todo | Todo | Todo | Todo | — | — |
-| FEAT-005.5 | Product attributes | Todo | Todo | Todo | Todo | — | — |
-| FEAT-005.6 | Units of measure | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-005.1 | Size master and size groups | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-005.2 | Color master | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-005.3 | Categories / departments | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-005.4 | Season and collection | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-005.5 | Product attributes | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-005.6 | Units of measure | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-006 Product catalog and variant matrix — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-006.1 | Style (product master) | Todo | Todo | Todo | Todo | — | — |
-| FEAT-006.2 | Colorways | Todo | Todo | Todo | Todo | — | — |
-| FEAT-006.3 | Variant matrix and SKU generation | Todo | Todo | Todo | Todo | — | — |
-| FEAT-006.4 | Variant pricing and cost fields | Todo | Todo | Todo | Todo | — | — |
-| FEAT-006.5 | Product search and list | Todo | Todo | Todo | Todo | — | — |
-| FEAT-006.6 | Activate / archive | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-006.1 | Style (product master) | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-006.2 | Colorways | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-006.3 | Variant matrix and SKU generation | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-006.4 | Variant pricing and cost fields | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-006.5 | Product search and list | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-006.6 | Activate / archive | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-007 Barcodes and labels — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-007.1 | Barcode generation and assignment | Todo | Todo | Todo | Todo | — | — |
-| FEAT-007.2 | Barcode lookup | Todo | Todo | Todo | Todo | — | — |
-| FEAT-007.3 | Label templates | Todo | Todo | Todo | Todo | — | — |
-| FEAT-007.4 | Label printing | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-007.1 | Barcode generation and assignment | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-007.2 | Barcode lookup | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-007.3 | Label templates | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-007.4 | Label printing | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-008 Product media — P1
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-008.1 | Image upload per style/colorway | Todo | Todo | Todo | Todo | — | — |
-| FEAT-008.2 | Image ordering and primary image | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-008.1 | Image upload per style/colorway | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-008.2 | Image ordering and primary image | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-009 Data import — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-009.1 | Import framework | Todo | Todo | Todo | Todo | — | — |
-| FEAT-009.2 | Preview and validation | Todo | Todo | Todo | Todo | — | — |
-| FEAT-009.3 | Product/variant import | Todo | Todo | Todo | Todo | — | — |
-| FEAT-009.4 | Supplier and customer import | Todo | Todo | Todo | Todo | — | — |
-| FEAT-009.5 | Opening stock import | Todo | Todo | Todo | Todo | — | — |
-| FEAT-009.6 | Import reconciliation report | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-009.1 | Import framework | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-009.2 | Preview and validation | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-009.3 | Product/variant import | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-009.4 | Supplier and customer import | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-009.5 | Opening stock import | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-009.6 | Import reconciliation report | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-010 Supplier master — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-010.1 | Supplier CRUD | Todo | Todo | Todo | Todo | — | — |
-| FEAT-010.2 | Supplier product codes | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-010.1 | Supplier CRUD | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-010.2 | Supplier product codes | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-011 Customer master — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-011.1 | Customer CRUD | Todo | Todo | Todo | Todo | — | — |
-| FEAT-011.2 | Quick add at POS | Todo | Todo | Todo | Todo | — | — |
-| FEAT-011.3 | Purchase history | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-011.1 | Customer CRUD | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-011.2 | Quick add at POS | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-011.3 | Purchase history | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ## Stage 2 — Inventory and procurement
 
 ### FEAT-012 Inventory ledger and balances — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-012.1 | Immutable stock movements | Todo | Todo | N/A | Todo | — | — |
-| FEAT-012.2 | Balance projection | Todo | Todo | Todo | Todo | — | — |
-| FEAT-012.3 | Idempotent posting | Todo | Todo | N/A | Todo | — | — |
-| FEAT-012.4 | Concurrency control | Todo | Todo | N/A | Todo | — | — |
-| FEAT-012.5 | Stock views | Todo | Todo | Todo | Todo | — | — |
-| FEAT-012.6 | Movement history | Todo | Todo | Todo | Todo | — | — |
-| FEAT-012.7 | Ledger rebuild check | Todo | Todo | N/A | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-012.1 | Immutable stock movements | Todo | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |
+| FEAT-012.2 | Balance projection | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-012.3 | Idempotent posting | Todo | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |
+| FEAT-012.4 | Concurrency control | Todo | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |
+| FEAT-012.5 | Stock views | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-012.6 | Movement history | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-012.7 | Ledger rebuild check | Todo | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |
 
 ### FEAT-013 Opening stock — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-013.1 | Opening stock entry | Todo | Todo | Todo | Todo | — | — |
-| FEAT-013.2 | Opening cost | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-013.1 | Opening stock entry | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-013.2 | Opening cost | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-014 Stock adjustments — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-014.1 | Adjustment document | Todo | Todo | Todo | Todo | — | — |
-| FEAT-014.2 | Approval rules | Todo | Todo | Todo | Todo | — | — |
-| FEAT-014.3 | Bucket moves | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-014.1 | Adjustment document | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-014.2 | Approval rules | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-014.3 | Bucket moves | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-015 Stock count — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-015.1 | Count session | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-015.2 | Blind count entry | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-015.3 | Variance and recount | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-015.4 | Approval and adjustment posting | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-015.1 | Count session | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-015.2 | Blind count entry | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-015.3 | Variance and recount | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-015.4 | Approval and adjustment posting | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-016 Transfers — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-016.1 | Transfer request and approval | Todo | Todo | Todo | Todo | — | — |
-| FEAT-016.2 | Dispatch | Todo | Todo | Todo | Todo | — | — |
-| FEAT-016.3 | Partial / full receive | Todo | Todo | Todo | Todo | — | — |
-| FEAT-016.4 | Discrepancy resolution | Todo | Todo | Todo | Todo | — | — |
-| FEAT-016.5 | Transfer close | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-016.1 | Transfer request and approval | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-016.2 | Dispatch | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-016.3 | Partial / full receive | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-016.4 | Discrepancy resolution | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-016.5 | Transfer close | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-017 Reservations and availability — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-017.1 | Reservation create / release / consume | Todo | Todo | N/A | Todo | — | — |
-| FEAT-017.2 | Available-to-sell calculation | Todo | Todo | N/A | Todo | — | — |
-| FEAT-017.3 | Safety buffer settings | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-017.1 | Reservation create / release / consume | Todo | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |
+| FEAT-017.2 | Available-to-sell calculation | Todo | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |
+| FEAT-017.3 | Safety buffer settings | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-018 Cost layers and aging — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-018.1 | Receipt cost layers | Blocked | Todo | N/A | Todo | — | — |
-| FEAT-018.2 | Cost of goods on sale | Blocked | Todo | N/A | Todo | — | — |
-| FEAT-018.3 | Age provenance through transfers | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-018.4 | Inventory valuation view | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-018.1 | Receipt cost layers | Blocked | Todo | N/A | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | — |
+| FEAT-018.2 | Cost of goods on sale | Blocked | Todo | N/A | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | — |
+| FEAT-018.3 | Age provenance through transfers | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-018.4 | Inventory valuation view | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-019 Purchase orders — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-019.1 | Draft PO with size matrix entry | Todo | Todo | Todo | Todo | — | — |
-| FEAT-019.2 | Approval | Todo | Todo | Todo | Todo | — | — |
-| FEAT-019.3 | Send / mark ordered | Todo | Todo | Todo | Todo | — | — |
-| FEAT-019.4 | PO status tracking | Todo | Todo | Todo | Todo | — | — |
-| FEAT-019.5 | Landed cost (P1) | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-019.1 | Draft PO with size matrix entry | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-019.2 | Approval | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-019.3 | Send / mark ordered | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-019.4 | PO status tracking | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-019.5 | Landed cost (P1) | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-020 Goods receipt — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-020.1 | Receive against PO | Todo | Todo | Todo | Todo | — | — |
-| FEAT-020.2 | Inspection | Todo | Todo | Todo | Todo | — | — |
-| FEAT-020.3 | Over/short handling | Todo | Todo | Todo | Todo | — | — |
-| FEAT-020.4 | Label print on receipt | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-020.1 | Receive against PO | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-020.2 | Inspection | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-020.3 | Over/short handling | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-020.4 | Label print on receipt | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-021 Supplier returns — P1
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-021.1 | Return to supplier document | Todo | Todo | Todo | Todo | — | — |
-| FEAT-021.2 | Supplier credit tracking | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-021.1 | Return to supplier document | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-021.2 | Supplier credit tracking | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ## Stage 3 — Store retail
 
 ### FEAT-022 Pricing and price lists — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-022.1 | Base price per variant | Todo | Todo | Todo | Todo | — | — |
-| FEAT-022.2 | Location price lists (P1) | Todo | Todo | Todo | Todo | — | — |
-| FEAT-022.3 | Price history | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-022.1 | Base price per variant | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-022.2 | Location price lists (P1) | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-022.3 | Price history | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-023 Basic discounts — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-023.1 | Line and cart discount | Todo | Todo | Todo | Todo | — | — |
-| FEAT-023.2 | Simple promotions | Todo | Todo | Todo | Todo | — | — |
-| FEAT-023.3 | Manager override | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-023.1 | Line and cart discount | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-023.2 | Simple promotions | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-023.3 | Manager override | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-024 Tax calculation — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-024.1 | Tax rules by tax class | Blocked | Todo | N/A | Todo | — | — |
-| FEAT-024.2 | Tax-inclusive / exclusive pricing | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-024.3 | Tax on receipts and reports | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-024.4 | Tax classes | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-024.1 | Tax rules by tax class | Blocked | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |
+| FEAT-024.2 | Tax-inclusive / exclusive pricing | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-024.3 | Tax on receipts and reports | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-024.4 | Tax classes | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-025 POS checkout — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-025.1 | Cart via scan / search | Todo | Todo | Todo | Todo | — | — |
-| FEAT-025.2 | Customer attach | Todo | Todo | Todo | Todo | — | — |
-| FEAT-025.3 | Sale posting | Todo | Todo | Todo | Todo | — | — |
-| FEAT-025.4 | Hold / recall sale (P1) | Todo | Todo | Todo | Todo | — | — |
-| FEAT-025.5 | Void before completion | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-025.1 | Cart via scan / search | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-025.2 | Customer attach | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-025.3 | Sale posting | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-025.4 | Hold / recall sale (P1) | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-025.5 | Void before completion | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-026 Payments and split tender — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-026.1 | Cash with change | Todo | Todo | Todo | Todo | — | — |
-| FEAT-026.2 | Card / mobile wallet records | Todo | Todo | Todo | Todo | — | — |
-| FEAT-026.3 | Split tender | Todo | Todo | Todo | Todo | — | — |
-| FEAT-026.4 | Integrated payment provider (P1) | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-026.1 | Cash with change | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-026.2 | Card / mobile wallet records | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-026.3 | Split tender | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-026.4 | Integrated payment provider (P1) | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-027 Cash shifts and register — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-027.1 | Register setup | Todo | Todo | Todo | Todo | — | — |
-| FEAT-027.2 | Open shift with float | Todo | Todo | Todo | Todo | — | — |
-| FEAT-027.3 | Cash in / cash out | Todo | Todo | Todo | Todo | — | — |
-| FEAT-027.4 | Close shift and reconciliation | Todo | Todo | Todo | Todo | — | — |
-| FEAT-027.5 | Shift report (X/Z) | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-027.1 | Register setup | Requirements | Todo | Todo | Todo | — | 1 | 0.5 | 2.5 | 0.75 | 2 | 0.75 | 1.5 | 0.5 | 2026-10-14 Minhaj |
+| FEAT-027.2 | Open shift with float | Requirements | Todo | Todo | Todo | — | 0.5 | 0.25 | 4 | 1.25 | 3 | 1 | 2.5 | 0.75 | 2026-10-14 Minhaj |
+| FEAT-027.3 | Cash in / cash out | Requirements | Todo | Todo | Todo | — | 0.5 | 0.25 | 3 | 1 | 2.5 | 0.75 | 2 | 0.5 | 2026-10-14 Minhaj |
+| FEAT-027.4 | Close shift and reconciliation | Requirements | Todo | Todo | Todo | — | 0.5 | 0.25 | 5 | 1.5 | 3.5 | 1 | 3 | 1 | 2026-10-14 Minhaj |
+| FEAT-027.5 | Shift report (X/Z) | Requirements | Todo | Todo | Todo | — | 0.5 | 0.25 | 3 | 1 | 3 | 0.75 | 2 | 0.5 | 2026-10-14 Minhaj |
 
 ### FEAT-028 Receipts and printing — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-028.1 | Receipt template | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-028.2 | Thermal print | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-028.3 | Reprint and SMS/digital receipt (P1) | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-028.1 | Receipt template | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-028.2 | Thermal print | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-028.3 | Reprint and SMS/digital receipt (P1) | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-029 Returns and exchanges — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-029.1 | Find original sale | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-029.2 | Eligibility check | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-029.3 | Return with inspection | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-029.4 | Refund | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-029.5 | Exchange | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-029.1 | Find original sale | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-029.2 | Eligibility check | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-029.3 | Return with inspection | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-029.4 | Refund | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-029.5 | Exchange | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-030 Offline POS — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-030.1 | Local catalog/price cache | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-030.2 | Offline sale queue | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-030.3 | Sync on reconnect | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-030.4 | Conflict handling | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-030.1 | Local catalog/price cache | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-030.2 | Offline sale queue | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-030.3 | Sync on reconnect | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-030.4 | Conflict handling | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ## Stage 4 — Automated online operations
 
 ### FEAT-031 Integration framework — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-031.1 | Transactional outbox | Done | Done | N/A | Done | — | 2026-10-12 Codex |
-| FEAT-031.2 | Background worker and job queue | Done | Done | N/A | Done | — | 2026-10-13 Codex |
-| FEAT-031.3 | Connector abstraction | Done | Done | N/A | Done | — | 2026-10-12 Codex |
-| FEAT-031.4 | Inbound webhooks | Done | Done | N/A | Done | — | 2026-10-12 Codex |
-| FEAT-031.5 | Retry with backoff and dead-letter | Done | Done | N/A | Done | — | 2026-10-12 Codex |
-| FEAT-031.6 | Connection settings UI | Done | Done | Done | Done | — | 2026-10-12 Codex |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-031.1 | Transactional outbox | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Codex |
+| FEAT-031.2 | Background worker and job queue | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-13 Codex |
+| FEAT-031.3 | Connector abstraction | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Codex |
+| FEAT-031.4 | Inbound webhooks | Done | Done | N/A | Done | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | 2026-10-12 Codex |
+| FEAT-031.5 | Retry with backoff and dead-letter | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Codex |
+| FEAT-031.6 | Connection settings UI | Done | Done | Done | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | 2026-10-12 Codex |
 
 ### FEAT-032 Ecommerce catalog mapping and stock publication — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-032.1 | External product/variant mapping | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-032.2 | Unmapped items queue | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-032.3 | Available stock publication | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-032.4 | Catalog authority rules | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-032.1 | External product/variant mapping | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-032.2 | Unmapped items queue | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-032.3 | Available stock publication | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-032.4 | Catalog authority rules | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-033 Online order intake — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-033.1 | Automated order import | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-033.2 | Mapping validation | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-033.3 | Reservation on import | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-033.4 | Order list and detail | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-033.5 | Cancellation | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-033.6 | Fulfilment location routing (P1) | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-033.1 | Automated order import | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-033.2 | Mapping validation | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-033.3 | Reservation on import | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-033.4 | Order list and detail | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-033.5 | Cancellation | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-033.6 | Fulfilment location routing (P1) | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-034 Fulfilment — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-034.1 | Pick list | Todo | Todo | Todo | Todo | — | — |
-| FEAT-034.2 | Pack with scan verification | Todo | Todo | Todo | Todo | — | — |
-| FEAT-034.3 | Dispatch | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-034.1 | Pick list | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-034.2 | Pack with scan verification | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-034.3 | Dispatch | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-035 Courier booking and tracking — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-035.1 | Courier booking | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-035.2 | Shipping labels | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-035.3 | Tracking status sync | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-035.4 | Delivery / failed delivery handling | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-035.1 | Courier booking | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-035.2 | Shipping labels | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-035.3 | Tracking status sync | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-035.4 | Delivery / failed delivery handling | Blocked | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-036 COD settlement reconciliation — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-036.1 | Settlement import | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-036.2 | Match settlements to orders | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-036.3 | Exception queue | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-036.4 | COD outstanding report | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-036.1 | Settlement import | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-036.2 | Match settlements to orders | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-036.3 | Exception queue | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-036.4 | COD outstanding report | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-037 Online returns — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-037.1 | Courier return (RTO) tracking | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-037.2 | Return receipt and inspection | Blocked | Todo | Todo | Todo | — | — |
-| FEAT-037.3 | Online refund / exchange record | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-037.1 | Courier return (RTO) tracking | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-037.2 | Return receipt and inspection | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-037.3 | Online refund / exchange record | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-038 Integration health and recovery — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-038.1 | Integration health dashboard | Todo | Todo | Todo | Todo | — | — |
-| FEAT-038.2 | Failed event list and replay | Todo | Todo | Todo | Todo | — | — |
-| FEAT-038.3 | Stock drift reconciliation | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-038.1 | Integration health dashboard | Requirements | Todo | Todo | Todo | — | 0.25 | 0.25 | 2 | 0.5 | 2 | 0.5 | 1 | 0.25 | 2026-10-14 Minhaj |
+| FEAT-038.2 | Failed event list and replay | Requirements | Todo | Todo | Todo | — | 0.25 | 0.25 | 2.5 | 0.75 | 2.5 | 0.75 | 1.5 | 0.5 | 2026-10-14 Minhaj |
+| FEAT-038.3 | Stock drift reconciliation | Requirements | Todo | Todo | Todo | — | 0.5 | 0.5 | 3 | 1 | 2 | 0.5 | 1.5 | 0.5 | 2026-10-14 Minhaj (deferred until FEAT-032 ships; not assignable) |
 
 ## Stage 5 — Pilot readiness
 
 ### FEAT-039 Reports — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-039.1 | Sales report | Todo | Todo | Todo | Todo | — | — |
-| FEAT-039.2 | Stock on hand report | Todo | Todo | Todo | Todo | — | — |
-| FEAT-039.3 | Stock movement history report | Todo | Todo | Todo | Todo | — | — |
-| FEAT-039.4 | Inventory aging | Todo | Todo | Todo | Todo | — | — |
-| FEAT-039.5 | Sell-through and size performance | Todo | Todo | Todo | Todo | — | — |
-| FEAT-039.6 | End-of-day cash and COD totals | Todo | Todo | Todo | Todo | — | — |
-| FEAT-039.7 | Dashboard home | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-039.1 | Sales report | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-039.2 | Stock on hand report | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-039.3 | Stock movement history report | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-039.4 | Inventory aging | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-039.5 | Sell-through and size performance | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-039.6 | End-of-day cash and COD totals | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-039.7 | Dashboard home | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-040 Low stock rules and alerts — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-040.1 | Min/max rules per SKU/location | Todo | Todo | Todo | Todo | — | — |
-| FEAT-040.2 | Low stock list | Todo | Todo | Todo | Todo | — | — |
-| FEAT-040.3 | In-app notifications | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-040.1 | Min/max rules per SKU/location | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-040.2 | Low stock list | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-040.3 | In-app notifications | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-041 Exports — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-041.1 | CSV/XLSX export of lists and reports | Todo | Todo | Todo | Todo | — | — |
-| FEAT-041.2 | Accounting / tax exports | Blocked | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-041.1 | CSV/XLSX export of lists and reports | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-041.2 | Accounting / tax exports | Blocked | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-042 Localization — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-042.1 | Bangla / English UI | Todo | N/A | Todo | Todo | — | — |
-| FEAT-042.2 | BDT currency and number formatting | Todo | Todo | Todo | Todo | — | — |
-| FEAT-042.3 | Business timezone and dates | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-042.1 | Bangla / English UI | Requirements | N/A | Todo | Todo | — | 0.25 | 0.25 | — | — | 4 | 1.5 | 1.5 | 0.5 | 2026-10-14 Minhaj |
+| FEAT-042.2 | BDT currency and number formatting | Requirements | Todo | Todo | Todo | — | 0.25 | 0.25 | 1 | 0.25 | 2.5 | 0.75 | 1 | 0.5 | 2026-10-14 Minhaj |
+| FEAT-042.3 | Business timezone and dates | Requirements | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 2 | 0.5 | 1 | 0.25 | 2026-10-14 Minhaj |
 
 ### FEAT-043 Tenant onboarding — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-043.1 | Signup and tenant creation | Todo | Todo | Todo | Todo | — | — |
-| FEAT-043.2 | Setup wizard | Todo | Todo | Todo | Todo | — | — |
-| FEAT-043.3 | Go-live checklist | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-043.1 | Signup and tenant creation | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-043.2 | Setup wizard | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
+| FEAT-043.3 | Go-live checklist | Todo | Todo | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | — |
 
 ### FEAT-044 SaaS administration — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-044.1 | Platform admin console | Todo | Todo | Todo | Todo | — | — |
-| FEAT-044.2 | Plans and limits | Todo | Todo | Todo | Todo | — | — |
-| FEAT-044.3 | Support access | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-044.1 | Platform admin console | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-044.2 | Plans and limits | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
+| FEAT-044.3 | Support access | Todo | Todo | Todo | Todo | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | — |
 
 ### FEAT-045 Backup and operational recovery — P0
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-045.1 | Backup / restore procedure | Todo | Todo | N/A | Todo | — | — |
-| FEAT-045.2 | Monitoring and alerting | Todo | Todo | N/A | Todo | — | — |
-| FEAT-045.3 | Runbooks | Todo | Todo | Todo | Todo | — | — |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-045.1 | Backup / restore procedure | Requirements | Todo | N/A | Todo | — | 0.5 | 0.5 | 3.5 | 1 | — | — | 2 | 0.5 | 2026-10-14 Minhaj |
+| FEAT-045.2 | Monitoring and alerting | Requirements | Todo | N/A | Todo | — | 0.5 | 0.5 | 4 | 1.25 | — | — | 2 | 0.5 | 2026-10-14 Minhaj |
+| FEAT-045.3 | Runbooks | Requirements | Todo | N/A | Todo | — | 0.25 | 0.25 | 2 | 0.5 | — | — | 1 | 0.25 | 2026-10-14 Minhaj |
 
 ## Stage 6 — Developer tooling
 
 ### FEAT-046 Local agent dashboard — P1
 
-| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | Updated |
-|---|---|---|---|---|---|---|---|
-| FEAT-046.1 | Activity telemetry and local server | Done | Done | N/A | Done | — | 2026-10-12 Codex |
-| FEAT-046.2 | Dashboard and agent avatars | Done | Done | Done | Done | — | 2026-10-12 Codex |
-| FEAT-046.3 | Claude hooks and Codex reporting | Done | Done | N/A | Done | — | 2026-10-12 Codex |
+| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FEAT-046.1 | Activity telemetry and local server | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Codex |
+| FEAT-046.2 | Dashboard and agent avatars | Done | Done | Done | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | 1.5 | 0.5 | 1 | 0.25 | 2026-10-12 Codex |
+| FEAT-046.3 | Claude hooks and Codex reporting | Done | Done | N/A | Done | — | 0.25 | 0.25 | 1.5 | 0.5 | — | — | 0.75 | 0.25 | 2026-10-12 Codex |
 
 ## Post-release backlog (P2)
 
@@ -496,6 +510,8 @@ A sub-feature is `Done` only when QA = `Done` and Bugs is empty. A feature is `D
 
 | Date | Change | By |
 |---|---|---|
+| 2026-10-14 | User accepted all proposed business answers for FEAT-027 (B1-B9), FEAT-038 (Q1-Q5; 038.3 deferred until FEAT-032), FEAT-042 (Q1-Q6), FEAT-045 (Q1-Q6; Neon plan check, Sentry cost/owner and operator names still open). Requirements stay at Requirements pending human approval of review and estimates; no sub-feature approved | Minhaj |
+| 2026-10-13 | Added delivery mode (`agent-human-review` default / `fully-agentic`), `Review` layer status and per-layer agent/verify hour estimates (baseline, to be refined by Minhaj at requirement review) | Claude |
 | 2026-10-12 | User requested FEAT-046 local developer dashboard; delivered telemetry/SSE, four SVG avatars, Claude hooks and Codex reporting, independently verified 22 tests and closed all three sub-features | Codex |
 | 2026-10-12 | Progress list created from `feature-list.md` | Setup |
 | 2026-10-12 | D-01 decided (Better Auth): FEAT-002 unblocked. FEAT-005.6 changed to Units of measure; tax classes moved to new FEAT-024.4 | Setup |

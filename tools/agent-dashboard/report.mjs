@@ -23,7 +23,7 @@ const { values, positionals } = parseArgs({
 });
 if (values.help) {
   console.log(
-    'Agent activity reporting\n\nnode tools/agent-dashboard/report.mjs --agent <minhaj|rabbi|shamim|tanvir> --source <codex|claude|manual> --session <stable-id> --status <active|waiting|idle|completed|failed> --feature FEAT-XXX --task "Short summary"\n\nOptional: --action "Latest action" --to <next-agent>\nLong commands: add --run -- <executable> <args> for 15-second heartbeats.\nUse non-sensitive summaries only.',
+    'Agent activity reporting\n\nnode tools/agent-dashboard/report.mjs --agent <minhaj|rabbi|shamim|tanvir|nadia> --source <codex|claude|manual> --session <stable-id> --status <active|waiting|idle|completed|failed> --feature FEAT-XXX --task "Short summary"\n\nOptional: --action "Latest action" --to <next-agent>\nLong commands: add --run -- <executable> <args> for 15-second heartbeats.\nUse non-sensitive summaries only.',
   );
   process.exit(0);
 }

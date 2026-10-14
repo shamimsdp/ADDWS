@@ -10,12 +10,13 @@ const epoch = '2026-10-12T10:00:00.000Z';
 const entry = (type, payload, timestamp = epoch) =>
   JSON.stringify({ type, payload, timestamp }) + '\n';
 const lifecycle = (type, timestamp) => entry('event_msg', { type }, timestamp);
-function meta(root, id = 'root-session', agentPath) {
+// Sessions without a project agent path are the unattributed main session; fixtures default to Minhaj's agent.
+function meta(root, id = 'root-session', agentPath = '/root/minhaj_main') {
   return entry('session_meta', {
     id,
     session_id: 'shared-root-session',
     cwd: root,
-    source: agentPath ? { subagent: { thread_spawn: { agent_path: agentPath } } } : 'vscode',
+    source: { subagent: { thread_spawn: { agent_path: agentPath } } },
     base_instructions: 'private initial instructions',
   });
 }
@@ -50,6 +51,20 @@ test('startup reconstructs historical completion without making it fresh; polls 
   assert.equal(watcher.status().count, 1);
   assert.equal(watcher.status().sessions, 1);
   assert.equal(watcher.status().available, true);
+});
+
+test('the root session is tracked as the main session, never as Minhaj', async (t) => {
+  const f = await fixture(t);
+  await writeFile(
+    f.filename,
+    entry('session_meta', { id: 'main', cwd: f.root, source: 'vscode' }) +
+      lifecycle('task_started'),
+  );
+  await collector(t, f);
+  const events = await readEvents(f.directory);
+  assert.ok(events.length > 0);
+  assert.ok(events.every((event) => event.agent === 'main'));
+  assert.ok(runtime(events).every((agent) => agent.status === 'idle'));
 });
 
 test('appended byte size detects activity with frozen mtime and partial JSON lines', async (t) => {

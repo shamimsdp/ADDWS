@@ -55,7 +55,11 @@ When done, keep the **Frontend handoff** compact:
 - targeted validation and pass/fail counts
 - unresolved risks and essential QA setup
 
-Then update the feature's row in `context/task-board.md` to `QA - Tanvir`, and set the **FE (Shamim)** column to `Done` (plus the Updated date) for each delivered sub-feature in `context/feature-progress-list.md`, then run `node scripts/feature-queue.mjs`.
+Then update the feature's row in `context/task-board.md` and the **FE (Shamim)** column (plus the Updated date) for each delivered sub-feature in `context/feature-progress-list.md`, then run `node scripts/feature-queue.mjs`. The value depends on the delivery mode in `context/delivery-config.json`:
+- `agent-human-review`: FE = `Review`, board status `Human review - FE`; end with `Agent: none` asking the human to review and verify. QA starts only after the human sets FE to `Done`.
+- `fully-agentic`: FE = `Done`, board status `QA - Tanvir`.
+
+If the actual effort differs a lot from the **FE agent (h)** estimate, note it in the handoff.
 
 For a bug fix, add or adjust a meaningful regression test and rerun the failed case plus affected group. Do not restart the complete browser suite for an isolated selector or fixture-only change.
 

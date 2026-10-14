@@ -4,7 +4,9 @@ import { agentId, dataDirectory, report } from './store.mjs';
 
 export function hookEvent(input) {
   const type = input.hook_event_name;
-  const agent = agentId(input.agent_type) ?? (input.agent_id ? null : 'minhaj');
+  // Named project agents map to their cards. The main session (no agent id) is recorded as the
+  // coordinator, never as Minhaj; other subagents are ignored.
+  const agent = agentId(input.agent_type) ?? (input.agent_id ? null : 'main');
   if (!agent || typeof input.session_id !== 'string') return null;
   const status = {
     SessionStart: 'idle',
@@ -27,7 +29,7 @@ export function hookEvent(input) {
     sessionId: `${input.session_id}/${input.agent_id ?? 'main'}`,
     status,
     // Raw hook input, prompt, commands, tool output and transcript paths are never persisted.
-    task: input.agent_id ? `${agent} agent session` : 'Project coordination',
+    task: agent === 'main' ? 'Main session' : `${agent} agent session`,
     action:
       type === 'PreToolUse'
         ? `Using ${String(input.tool_name ?? 'tool')

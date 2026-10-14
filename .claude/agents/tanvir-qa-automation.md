@@ -52,8 +52,8 @@ Minhaj assigns BUG IDs and owners; you only suggest the layer.
 ## Handoff
 
 Fill the **QA report** section: test commands run, pass/fail counts, AC results table, bugs found.
-- If all ACs pass and no bugs: set board status `Ready to close - Minhaj`.
-- Update `context/feature-progress-list.md` for each tested sub-feature: **QA (Tanvir)** = `Done` when its ACs pass, or `Bug` with the bug title in the **Bugs** column (Minhaj replaces it with the BUG ID); set the Updated date.
+- If all ACs pass and no bugs: set board status `Ready to close - Minhaj` (`Human review - QA` in agent-human-review mode).
+- Update `context/feature-progress-list.md` for each tested sub-feature: **QA (Tanvir)** = `Done` when its ACs pass (`Review` instead in agent-human-review mode — the human signs off the QA report and sets `Done`; see `context/delivery-config.json`), or `Bug` with the bug title in the **Bugs** column (Minhaj replaces it with the BUG ID); set the Updated date.
 - If bugs found: set board status `Bug triage - Minhaj`.
 
 On a retest, run the failed test and affected group. Repeat broad suites only when the fix changed application behavior, shared infrastructure, or evidence shows wider risk. Mark the bug `Verified` or `Reopened`.

@@ -35,12 +35,12 @@ function workspaces(root) {
 function role(meta) {
   const child = meta.source?.subagent?.thread_spawn ?? meta.thread_source?.subagent?.thread_spawn;
   const agentPath = meta.agent_path ?? child?.agent_path;
-  if (typeof agentPath !== 'string') {
-    return child || (typeof meta.source === 'object' && meta.source?.subagent) ? null : 'minhaj';
-  }
-  if (agentPath === '/root') return 'minhaj';
+  // The root session coordinates; it is tracked as the main session, never as Minhaj.
+  if (typeof agentPath !== 'string')
+    return child || (typeof meta.source === 'object' && meta.source?.subagent) ? null : 'main';
+  if (agentPath === '/root') return 'main';
   const leaf = agentPath.split('/').at(-1);
-  for (const name of ['minhaj', 'rabbi', 'shamim', 'tanvir']) {
+  for (const name of ['minhaj', 'rabbi', 'shamim', 'tanvir', 'nadia']) {
     if (new RegExp(`^${name}(?:[_-]|$)`).test(leaf)) return name;
   }
   if (/^dashboard[_-]qa(?:[_-]|$)/.test(leaf)) return 'tanvir';

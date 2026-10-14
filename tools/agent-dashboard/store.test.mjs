@@ -1,11 +1,20 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import http from 'node:http';
 import { hookEvent } from './claude-hook.mjs';
-import { parseProject, readEvents, report, runtime, safeText, STALE_MS } from './store.mjs';
+import {
+  parseProject,
+  parseWbs,
+  readEvents,
+  report,
+  runtime,
+  safeText,
+  STALE_MS,
+  workflowStatus,
+} from './store.mjs';
 import { createDashboard } from './server.mjs';
 
 const at = new Date('2026-10-12T09:00:00Z');
@@ -89,6 +98,11 @@ test('hook records only safe metadata and rejects unrelated subagents', () => {
   assert.equal(event.action, 'Using Bash');
   assert.doesNotMatch(JSON.stringify(event), /secret command|private prompt|transcript/);
   assert.equal(hookEvent({ ...input, agent_type: 'Explore' }), null);
+  // The main session (no agent type, no agent id) is the coordinator, never a team member.
+  const main = hookEvent({ hook_event_name: 'UserPromptSubmit', session_id: 'one' });
+  assert.equal(main.agent, 'main');
+  assert.ok(runtime([{ ...main, at: new Date().toISOString() }]).every((a) => a.status === 'idle'));
+  assert.equal(hookEvent({ ...input, agent_type: 'nadia-cr-manager' }).agent, 'nadia');
   assert.equal(hookEvent({ ...input, hook_event_name: 'SubagentStop' }).status, 'completed');
   assert.equal(hookEvent({ ...input, hook_event_name: 'PermissionRequest' }).status, 'waiting');
 });
@@ -197,4 +211,97 @@ test('stored extra fields and accidental credentials are never served as activit
   );
   const serialized = JSON.stringify(await readEvents(directory));
   assert.doesNotMatch(serialized, /private prompt|private input|private-token|toolInput/);
+});
+
+const wbsProgress = [
+  '## Summary',
+  '| Stage | Features |',
+  '## Stage 1 — Foundation',
+  '### FEAT-003 Roles and permissions — P0',
+  '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | PM verify (h) | BE agent (h) | BE verify (h) | FE agent (h) | FE verify (h) | QA agent (h) | QA verify (h) | Updated |',
+  '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
+  '| FEAT-003.1 | Predefined roles | Backend | Review | Todo | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | 2.25 | 0.75 | 1.5 | 0.5 | Today |',
+  '| FEAT-003.2 | Guards token=abc123 | Todo | Todo | N/A | Todo | — | 0.5 | 0.5 | 2.25 | 0.75 | — | — | 1.25 | 0.5 | — |',
+  '## Change log',
+  '| FEAT-999.1 | Not a sub-feature row | Done | Done | Done | Done | — | — |',
+].join('\n');
+
+test('WBS parses stages, features, layer status and estimates by header name', () => {
+  const wbs = parseWbs(wbsProgress, '{"mode":"agent-human-review"}');
+  assert.equal(wbs.mode, 'agent-human-review');
+  assert.equal(wbs.estimateColumns.length, 8);
+  assert.equal(wbs.stages.length, 1);
+  const [feature] = wbs.stages[0].features;
+  assert.deepEqual(
+    [feature.id, feature.name, feature.priority],
+    ['FEAT-003', 'Roles and permissions', 'P0'],
+  );
+  assert.equal(feature.subs.length, 2);
+  assert.equal(feature.subs[0].be, 'Review');
+  assert.equal(feature.subs[0].estimates['BE verify (h)'], 0.75);
+  assert.equal(feature.subs[1].estimates['FE agent (h)'], null);
+  assert.ok(!feature.subs[1].name.includes('abc123'));
+  assert.equal(parseWbs(wbsProgress, 'not json').mode, 'agent-human-review');
+});
+
+test('WBS page and API are served read-only from the progress list', async (t) => {
+  const directory = await fixture(t);
+  await mkdir(path.join(directory, 'context'));
+  await writeFile(path.join(directory, 'context/feature-progress-list.md'), wbsProgress);
+  await writeFile(path.join(directory, 'context/delivery-config.json'), '{"mode":"fully-agentic"}');
+  const dashboard = createDashboard({ root: directory, directory });
+  await new Promise((resolve) => dashboard.server.listen(0, '127.0.0.1', resolve));
+  t.after(() => dashboard.close());
+  const url = `http://127.0.0.1:${dashboard.server.address().port}`;
+  const api = await (await fetch(`${url}/api/wbs`)).json();
+  assert.equal(api.mode, 'fully-agentic');
+  assert.equal(api.stages[0].features[0].subs[0].id, 'FEAT-003.1');
+  const page = await fetch(`${url}/wbs`);
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /Work breakdown/);
+  assert.equal((await fetch(`${url}/api/wbs`, { method: 'POST' })).status, 405);
+  assert.equal((await fetch(`${url}/context/delivery-config.json`)).status, 404);
+});
+
+test('real agent photos are advertised and served only for known agents and image types', async (t) => {
+  const directory = await fixture(t);
+  const avatars = path.join(directory, 'avatars');
+  await mkdir(avatars);
+  const dashboard = createDashboard({ directory, avatars });
+  await new Promise((resolve) => dashboard.server.listen(0, '127.0.0.1', resolve));
+  t.after(() => dashboard.close());
+  const url = `http://127.0.0.1:${dashboard.server.address().port}`;
+  await writeFile(path.join(avatars, 'rabbi.webp'), 'webp-bytes');
+  await writeFile(path.join(avatars, 'intruder.png'), 'png-bytes');
+  const snapshot = await (await fetch(`${url}/api/snapshot`)).json();
+  assert.deepEqual(snapshot.photos, { rabbi: 'webp' });
+  const served = await fetch(`${url}/avatars/rabbi.webp`);
+  assert.equal(served.status, 200);
+  assert.equal(served.headers.get('content-type'), 'image/webp');
+  assert.equal(await served.text(), 'webp-bytes');
+  assert.equal((await fetch(`${url}/avatars/rabbi.png`)).status, 404);
+  assert.equal((await fetch(`${url}/avatars/intruder.png`)).status, 404);
+  assert.equal((await fetch(`${url}/avatars/shamim.jpg`)).status, 404);
+});
+
+test('workflow status separates named agents, main session only and idle', async (t) => {
+  const directory = await fixture(t);
+  const sample = { source: 'claude', status: 'active' };
+  assert.equal(workflowStatus(await readEvents(directory)).state, 'idle');
+  await report(directory, { ...sample, agent: 'main', sessionId: 'm/main', action: 'Using Bash' });
+  const mainOnly = workflowStatus(await readEvents(directory));
+  assert.equal(mainOnly.state, 'main');
+  assert.deepEqual(mainOnly.agents, []);
+  await report(directory, { ...sample, agent: 'rabbi', sessionId: 'm/r' });
+  await report(directory, { ...sample, status: 'waiting', agent: 'tanvir', sessionId: 'm/t' });
+  const running = workflowStatus(await readEvents(directory));
+  assert.equal(running.state, 'agents');
+  assert.deepEqual(running.agents.map((a) => a.name).sort(), ['Rabbi', 'Tanvir']);
+  // The coordinator never becomes a team card.
+  assert.ok(runtime(await readEvents(directory)).every((a) => a.id !== 'main'));
+  // Stale sessions stop counting as running work.
+  assert.equal(
+    workflowStatus(await readEvents(directory), Date.now() + STALE_MS * 2).state,
+    'idle',
+  );
 });

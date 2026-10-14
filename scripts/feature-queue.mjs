@@ -8,6 +8,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { columnsFor, hours, isAgentColumn, isHeader, isHumanColumn, readConfig, splitRow } from './delivery.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const listPath = join(root, 'context', 'feature-list.md');
@@ -15,6 +16,8 @@ const progressPath = join(root, 'context', 'feature-progress-list.md');
 const outPath = join(root, 'context', 'feature-queue.md');
 
 const ACTIVE = ['Requirements', 'Backend', 'Frontend', 'QA', 'Bug fix'];
+const { mode } = readConfig();
+const humanReview = mode === 'agent-human-review';
 const cell = (s) => s.trim();
 
 // ---------- parse feature list ----------
@@ -42,21 +45,29 @@ for (const line of readFileSync(listPath, 'utf8').split(/\r?\n/)) {
 }
 
 // ---------- parse progress list ----------
-const progress = new Map(); // sub id -> { name, status, be, fe, qa, bugs }
+const progress = new Map(); // sub id -> { name, status, be, fe, qa, bugs, agentH, humanH }
+const problems = [];
+const expectedHeader = columnsFor(mode).join(' | ');
+let header = [];
 for (const line of readFileSync(progressPath, 'utf8').split(/\r?\n/)) {
+  if (isHeader(line)) {
+    header = splitRow(line);
+    if (header.join(' | ') !== expectedHeader) problems.push(`progress table columns do not match delivery mode ${mode} — run \`node scripts/delivery-mode.mjs --sync\``);
+    continue;
+  }
   if (!/^\| FEAT-\d{3}\.\d+ \|/.test(line)) continue;
   const c = line.split('|').slice(1, -1).map(cell);
-  progress.set(c[0], { name: c[1], status: c[2], be: c[3], fe: c[4], qa: c[5], bugs: c[6] });
+  const sum = (pred) => header.reduce((t, name, i) => (pred(name) ? t + hours(c[i]) : t), 0);
+  progress.set(c[0], { name: c[1], status: c[2], be: c[3], fe: c[4], qa: c[5], bugs: c[6], agentH: sum(isAgentColumn), humanH: sum(isHumanColumn) });
 }
 
-const problems = [];
 for (const f of features.values()) {
   for (const s of f.subs) if (!progress.has(s)) problems.push(`${s} is in feature-list.md but missing from feature-progress-list.md`);
   for (const d of f.deps) if (!features.has(d.slice(0, 8))) problems.push(`${f.id} depends on unknown ${d}`);
 }
 for (const s of progress.keys()) if (!features.has(s.slice(0, 8))) problems.push(`${s} is in feature-progress-list.md but not in feature-list.md`);
 
-const sub = (id) => progress.get(id) ?? { name: '?', status: 'Todo', be: 'Todo', fe: 'Todo', qa: 'Todo', bugs: '—' };
+const sub = (id) => progress.get(id) ?? { name: '?', status: 'Todo', be: 'Todo', fe: 'Todo', qa: 'Todo', bugs: '—', agentH: 0, humanH: 0 };
 const isP1 = (id) => /\(P1\)/.test(sub(id).name);
 const coreSubs = (f) => (f.priority === 'P0' ? f.subs.filter((s) => !isP1(s)) : f.subs);
 const subDone = (id) => sub(id).status === 'Done';
@@ -125,7 +136,7 @@ function buildOrder() {
 // ---------- role queues ----------
 const subLine = (s) => `${s.id} ${s.name}`;
 const notApplicable = (v) => v === 'N/A';
-const rabbiQueue = [], shamimQueue = [], tanvirQueue = [], bugTriage = [], toClose = [], inRequirements = [];
+const rabbiQueue = [], shamimQueue = [], tanvirQueue = [], bugTriage = [], toClose = [], inRequirements = [], reviewQueue = [];
 for (const r of rows) {
   for (const s of r.subs) {
     if (s.status === 'Requirements') inRequirements.push(s);
@@ -136,6 +147,9 @@ for (const r of rows) {
       if (s.fe === 'Bug') shamimQueue.push({ s, why: `bug fix ${s.bugs}` });
       continue;
     }
+    // A layer in Review is agent-complete and waits for human verification before the next layer starts.
+    const inReview = [['BE', s.be], ['FE', s.fe], ['QA', s.qa]].filter(([, v]) => v === 'Review').map(([k]) => k);
+    if (inReview.length) { reviewQueue.push({ s, why: `${inReview.join(', ')} awaiting human review` }); continue; }
     if (s.be !== 'Done' && !notApplicable(s.be)) rabbiQueue.push({ s, why: s.be === 'In progress' ? 'in progress' : 'backend build' });
     else if (s.fe !== 'Done' && !notApplicable(s.fe)) shamimQueue.push({ s, why: s.fe === 'In progress' ? 'in progress' : 'frontend build' });
     else if (s.qa !== 'Done') tanvirQueue.push({ s, why: s.status === 'Bug fix' ? 'retest' : 'full QA' });
@@ -167,6 +181,8 @@ const list = (items, fmt, empty = '_None._') => { if (!items.length) p(empty); e
 p('# Feature queue');
 p();
 p(`Generated ${today} by \`node scripts/feature-queue.mjs\` from \`feature-list.md\` and \`feature-progress-list.md\`. **Do not edit by hand** — update those files and re-run.`);
+p();
+p(`Delivery mode: **${mode}** (\`context/delivery-config.json\`). ${humanReview ? 'Agent output marked `Review` waits for human verification before the next layer starts.' : 'Agents verify their own layers.'}`);
 p();
 p('Ranking rule: a feature that more other features depend on (directly or indirectly) goes first. Ties → P0 before P1 → earlier stage → lower ID.');
 p();
@@ -216,6 +232,12 @@ else {
   decisionNeeds.forEach((r) => p(`| ${r.f.decisions.join(', ') || 'see feature-list.md'} | ${r.f.id} ${r.f.name} | ${r.blocked.map((s) => s.id).join(', ')} | ${r.held} |`));
 }
 p();
+if (humanReview) {
+  p('### Human review — verify agent output');
+  p();
+  list(reviewQueue, ({ s, why }) => `- ${subLine(s)} — ${why}`);
+  p();
+} else reviewQueue.forEach(({ s }) => problems.push(`${s.id} has a layer in Review but delivery mode is fully-agentic`));
 for (const [who, q] of [['Rabbi — backend', rabbiQueue], ['Shamim — frontend', shamimQueue], ['Tanvir — QA', tanvirQueue]]) {
   p(`### ${who}`);
   p();
@@ -269,11 +291,13 @@ if (problems.length) {
 function refreshProgressSummary() {
   const stages = [...new Set(rows.map((r) => r.f.stage))];
   const stat = (rs, pred) => rs.flatMap((r) => r.subs).filter(pred).length;
-  const lines = ['| Stage | Features | Sub-features | Done | In progress | Blocked |', '|---|---|---|---|---|---|'];
-  const tot = [0, 0, 0, 0, 0];
+  const heads = ['Stage', 'Features', 'Sub-features', 'Done', 'In progress', 'Blocked', 'Agent h', ...(humanReview ? ['Human h'] : [])];
+  const lines = [`| ${heads.join(' | ')} |`, `|${heads.map(() => '---').join('|')}|`];
+  const hoursOf = (rs, key) => rs.flatMap((r) => r.subs).reduce((t, s) => t + s[key], 0);
+  const tot = heads.slice(1).map(() => 0);
   for (const st of stages) {
     const rs = rows.filter((r) => r.f.stage === st);
-    const v = [rs.length, stat(rs, () => true), stat(rs, (s) => s.status === 'Done'), stat(rs, (s) => ACTIVE.includes(s.status)), stat(rs, (s) => s.status === 'Blocked')];
+    const v = [rs.length, stat(rs, () => true), stat(rs, (s) => s.status === 'Done'), stat(rs, (s) => ACTIVE.includes(s.status)), stat(rs, (s) => s.status === 'Blocked'), hoursOf(rs, 'agentH'), ...(humanReview ? [hoursOf(rs, 'humanH')] : [])];
     v.forEach((x, i) => (tot[i] += x));
     lines.push(`| ${st} | ${v.join(' | ')} |`);
   }

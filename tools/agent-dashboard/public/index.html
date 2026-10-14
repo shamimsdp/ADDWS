@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="dark" />
     <title>Agent workspace · Inventory management</title>
     <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/theme.css" />
     <script src="/app.js" type="module"></script>
   </head>
   <body>
@@ -20,7 +21,8 @@
         <a class="nav-link selected" href="#agents"
           ><span aria-hidden="true">◈</span> Mission control</a
         ><a class="nav-link" href="#activity"><span aria-hidden="true">≋</span> Activity feed</a
-        ><a class="nav-link" href="#project"><span aria-hidden="true">▤</span> Project progress</a>
+        ><a class="nav-link" href="#project"><span aria-hidden="true">▤</span> Project progress</a
+        ><a class="nav-link" href="/wbs"><span aria-hidden="true">☷</span> WBS</a>
       </nav>
       <div class="sidebar-note">
         <span class="local-dot" aria-hidden="true"></span> Local workspace
@@ -54,29 +56,6 @@
           Disconnected from the local server. Retrying automatically; displayed activity may be out
           of date.
         </div>
-        <div class="collector-status" role="status">
-          <span id="collector-dot" class="collector-dot" aria-hidden="true"></span>
-          <span id="collector-label">Checking automatic activity collector…</span>
-          <span id="collector-seen"></span>
-        </div>
-        <section class="metrics" aria-label="Team status">
-          <div>
-            <span class="metric-icon lime" aria-hidden="true">↗</span>
-            <div><strong id="active-count">—</strong><span>Active agents</span></div>
-          </div>
-          <div>
-            <span class="metric-icon blue" aria-hidden="true">Ⅱ</span>
-            <div><strong id="waiting-count">—</strong><span>Waiting agents</span></div>
-          </div>
-          <div>
-            <span class="metric-icon purple" aria-hidden="true">✓</span>
-            <div><strong id="completed-count">—</strong><span>Completed agents</span></div>
-          </div>
-          <div>
-            <span class="metric-icon neutral" aria-hidden="true">◷</span>
-            <div><strong id="other-count">—</strong><span>Idle / stale / failed</span></div>
-          </div>
-        </section>
         <section
           id="agent-stage"
           class="agent-stage"
@@ -86,51 +65,72 @@
           <div class="stage-heading">
             <div>
               <p class="eyebrow">LIVE AGENT OBSERVATORY</p>
-              <h2 id="stage-title">A closer look at the work.</h2>
+              <h2 id="stage-title">Your agents, live.</h2>
+            </div>
+            <div id="workflow-status" class="workflow-status" data-state="idle" role="status">
+              <span class="workflow-dot" aria-hidden="true"></span>
+              <span id="workflow-label">Checking workflow…</span>
             </div>
             <div class="stage-controls">
               <button id="follow-live" type="button" aria-pressed="true">Follow live</button>
               <button id="motion-toggle" type="button" aria-pressed="false">Pause motion</button>
             </div>
           </div>
+          <div id="stage-team" class="stage-team" aria-label="Choose an agent"></div>
           <div class="observatory">
-            <div class="activity-stations" aria-label="Reported activity categories">
-              <div data-activity="thinking">
-                <span>✦</span>
-                <div><strong>Thinking</strong><small>Explicit planning report</small></div>
+            <div class="hub" id="hub">
+              <svg
+                id="hub-lines"
+                class="hub-lines"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              ></svg>
+              <div class="stage-center">
+                <div class="avatar-orbit" aria-hidden="true">
+                  <div class="orbit-ring"></div>
+                  <div class="orbit-ring inner"></div>
+                  <img
+                    id="stage-avatar"
+                    src="/avatars/minhaj.svg"
+                    alt=""
+                    width="220"
+                    height="220"
+                  />
+                  <span id="stage-symbol" class="stage-symbol">◷</span>
+                </div>
+                <h3 id="stage-name">Minhaj</h3>
+                <p id="stage-role">Project manager</p>
+                <div id="stage-state" class="stage-state" role="status">Ready for work</div>
+                <div class="work-indicator" aria-hidden="true"><i></i><i></i><i></i></div>
               </div>
-              <div data-activity="reading">
-                <span>▤</span>
-                <div><strong>Reading files</strong><small>Read tools</small></div>
+              <div id="hub-pulses" class="hub-pulses" aria-hidden="true"></div>
+              <div class="activity-stations" aria-label="Reported activity categories">
+                <div data-activity="thinking">
+                  <span>✦</span>
+                  <div><strong>Thinking</strong><small>Explicit planning report</small></div>
+                </div>
+                <div data-activity="reading">
+                  <span>▤</span>
+                  <div><strong>Reading files</strong><small>Read tools</small></div>
+                </div>
+                <div data-activity="searching">
+                  <span>⌕</span>
+                  <div><strong>Searching</strong><small>Discovery tools</small></div>
+                </div>
+                <div data-activity="coding">
+                  <span>&lt;/&gt;</span>
+                  <div><strong>Writing code</strong><small>Edit and write tools</small></div>
+                </div>
+                <div data-activity="running">
+                  <span>&gt;_</span>
+                  <div><strong>Running commands</strong><small>Shell tools</small></div>
+                </div>
+                <div data-activity="testing">
+                  <span>✓</span>
+                  <div><strong>Testing</strong><small>Explicit test report</small></div>
+                </div>
               </div>
-              <div data-activity="searching">
-                <span>⌕</span>
-                <div><strong>Searching</strong><small>Discovery tools</small></div>
-              </div>
-              <div data-activity="coding">
-                <span>&lt;/&gt;</span>
-                <div><strong>Writing code</strong><small>Edit and write tools</small></div>
-              </div>
-              <div data-activity="running">
-                <span>&gt;_</span>
-                <div><strong>Running commands</strong><small>Shell tools</small></div>
-              </div>
-              <div data-activity="testing">
-                <span>✓</span>
-                <div><strong>Testing</strong><small>Explicit test report</small></div>
-              </div>
-            </div>
-            <div class="stage-center">
-              <div class="avatar-orbit" aria-hidden="true">
-                <div class="orbit-ring"></div>
-                <div class="orbit-ring inner"></div>
-                <img id="stage-avatar" src="/avatars/minhaj.svg" alt="" width="220" height="220" />
-                <span id="stage-symbol" class="stage-symbol">◷</span>
-              </div>
-              <h3 id="stage-name">Minhaj</h3>
-              <p id="stage-role">Project manager</p>
-              <div id="stage-state" class="stage-state" role="status">Ready for work</div>
-              <div class="work-indicator" aria-hidden="true"><i></i><i></i><i></i></div>
               <div id="stage-team" class="stage-team" aria-label="Choose an agent"></div>
             </div>
             <div class="stage-readout">
@@ -154,6 +154,29 @@
             </div>
           </div>
         </section>
+        <div class="collector-status" role="status">
+          <span id="collector-dot" class="collector-dot" aria-hidden="true"></span>
+          <span id="collector-label">Checking automatic activity collector…</span>
+          <span id="collector-seen"></span>
+        </div>
+        <section class="metrics" aria-label="Team status">
+          <div>
+            <span class="metric-icon lime" aria-hidden="true">↗</span>
+            <div><strong id="active-count">—</strong><span>Active agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon blue" aria-hidden="true">Ⅱ</span>
+            <div><strong id="waiting-count">—</strong><span>Waiting agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon purple" aria-hidden="true">✓</span>
+            <div><strong id="completed-count">—</strong><span>Completed agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon neutral" aria-hidden="true">◷</span>
+            <div><strong id="other-count">—</strong><span>Idle / stale / failed</span></div>
+          </div>
+        </section>
         <section class="pipeline-panel" aria-label="Team handoff pipeline">
           <div class="section-mini">
             <strong>The handoff pipeline</strong><span>Each role owns one part of delivery</span>
@@ -163,7 +186,7 @@
         <section id="agents" aria-labelledby="team-title">
           <div class="section-heading">
             <div>
-              <h2 id="team-title">Meet your crew <span class="count-pill">4</span></h2>
+              <h2 id="team-title">Meet your crew <span class="count-pill">5</span></h2>
               <p>
                 Runtime activity is reported by sessions. Task assignments are shown separately.
               </p>
@@ -176,6 +199,7 @@
                   <option value="rabbi">Backend</option>
                   <option value="shamim">Frontend</option>
                   <option value="tanvir">QA</option>
+                  <option value="nadia">CR manager</option>
                 </select></label
               ><label
                 >Status<select id="status-filter" aria-label="Filter by status">

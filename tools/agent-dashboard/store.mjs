@@ -32,7 +32,17 @@ export const AGENTS = [
     specialty: 'Tests, regressions & verification',
     color: 'green',
   },
+  {
+    id: 'nadia',
+    name: 'Nadia',
+    role: 'CR manager',
+    specialty: 'Change requests & client impact',
+    color: 'rose',
+  },
 ];
+// The coordinating session is not a team member: it never appears as an agent card, but its
+// activity tells whether work is running without any named agent being dispatched.
+export const MAIN = { id: 'main', name: 'Main session', role: 'Coordinator' };
 export const STATUSES = ['active', 'waiting', 'idle', 'completed', 'failed'];
 export const STALE_MS = 120_000;
 
@@ -74,7 +84,7 @@ export function dataDirectory(root) {
 }
 
 export async function report(directory, input, now = new Date()) {
-  const agent = agentId(input.agent);
+  const agent = input.agent === MAIN.id ? MAIN.id : agentId(input.agent);
   if (!agent || !STATUSES.includes(input.status))
     throw new Error('A known agent and valid status are required.');
   const source = ['claude', 'codex', 'manual'].includes(input.source) ? input.source : 'manual';
@@ -124,7 +134,7 @@ export async function readEvents(directory) {
       .filter(
         (event) =>
           event &&
-          AGENTS.some((a) => a.id === event.agent) &&
+          (event.agent === MAIN.id || AGENTS.some((a) => a.id === event.agent)) &&
           STATUSES.includes(event.status) &&
           typeof event.sessionId === 'string' &&
           /^[a-zA-Z0-9:_./-]{1,120}$/.test(event.sessionId) &&
@@ -151,7 +161,7 @@ export async function readEvents(directory) {
   }
 }
 
-export function runtime(events, now = Date.now()) {
+export function runtime(events, now = Date.now(), roster = AGENTS) {
   const sessions = new Map();
   for (const event of events) {
     const previous = sessions.get(event.sessionId);
@@ -164,7 +174,7 @@ export function runtime(events, now = Date.now()) {
       startedAt: previous?.startedAt ?? event.at,
     });
   }
-  return AGENTS.map((agent) => {
+  return roster.map((agent) => {
     const runs = [...sessions.values()]
       .filter((run) => run.agent === agent.id)
       .map((run) => ({
@@ -241,4 +251,100 @@ export function parseProject(progress, board, queue) {
     })
     .filter(Boolean);
   return { totals, assignments, next };
+}
+
+const WBS_MODES = ['agent-human-review', 'fully-agentic'];
+const estimateValue = (value) => {
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+};
+
+// Full work breakdown from feature-progress-list.md: stage → feature → sub-feature, with every
+// status column and the per-layer hour estimates named by the table header.
+export function parseWbs(progress, configText = '') {
+  let mode = 'agent-human-review';
+  try {
+    const parsed = JSON.parse(configText || '{}').mode;
+    if (WBS_MODES.includes(parsed)) mode = parsed;
+  } catch {
+    // Unreadable config keeps the default mode.
+  }
+  const stages = [];
+  const estimates = [];
+  let stage = null;
+  let feature = null;
+  let header = [];
+  const cells = (line) =>
+    line
+      .split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+  for (const line of progress.split(/\r?\n/)) {
+    const stageMatch = line.match(/^## (Stage \d+ — .+)$/);
+    if (stageMatch) {
+      stage = { name: safeText(stageMatch[1]), features: [] };
+      stages.push(stage);
+      feature = null;
+      continue;
+    }
+    if (/^## /.test(line)) {
+      stage = null;
+      feature = null;
+      continue;
+    }
+    const featureMatch = stage && line.match(/^### (FEAT-\d{3}) (.+?) — (P\d)\s*$/);
+    if (featureMatch) {
+      feature = {
+        id: featureMatch[1],
+        name: safeText(featureMatch[2]),
+        priority: featureMatch[3],
+        subs: [],
+      };
+      stage.features.push(feature);
+      continue;
+    }
+    if (/^\| ID \| Sub-feature \|/.test(line)) {
+      header = cells(line);
+      for (const name of header)
+        if (/ (agent|verify) \(h\)$/.test(name) && !estimates.includes(name)) estimates.push(name);
+      continue;
+    }
+    if (!feature || !/^\| FEAT-\d{3}\.\d+ \|/.test(line)) continue;
+    const row = cells(line);
+    const value = (name) => row[header.indexOf(name)] ?? '';
+    feature.subs.push({
+      id: row[0],
+      name: safeText(value('Sub-feature')),
+      status: safeText(value('Status'), 40),
+      be: safeText(value('BE (Rabbi)'), 40),
+      fe: safeText(value('FE (Shamim)'), 40),
+      qa: safeText(value('QA (Tanvir)'), 40),
+      bugs: safeText(value('Bugs')),
+      updated: safeText(value('Updated'), 60),
+      estimates: Object.fromEntries(
+        header
+          .filter((name) => / (agent|verify) \(h\)$/.test(name))
+          .map((name) => [name, estimateValue(value(name))]),
+      ),
+    });
+  }
+  return { mode, estimateColumns: estimates, stages: stages.filter((s) => s.features.length) };
+}
+
+// Whether the agentic workflow is running: named agents working, the main session alone, or nothing.
+export function workflowStatus(events, now = Date.now()) {
+  const agents = runtime(events, now).filter((agent) =>
+    ['active', 'waiting'].includes(agent.status),
+  );
+  const [main] = runtime(events, now, [MAIN]);
+  const state = agents.length
+    ? 'agents'
+    : ['active', 'waiting'].includes(main.status)
+      ? 'main'
+      : 'idle';
+  return {
+    state,
+    agents: agents.map((agent) => ({ id: agent.id, name: agent.name, status: agent.status })),
+    main: { status: main.status, action: main.current?.action ?? '', lastSeen: main.lastSeen },
+  };
 }

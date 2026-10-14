@@ -1,17 +1,53 @@
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { AGENTS, dataDirectory, parseProject, readEvents, runtime, STALE_MS } from './store.mjs';
+import {
+  AGENTS,
+  dataDirectory,
+  parseProject,
+  parseWbs,
+  readEvents,
+  runtime,
+  STALE_MS,
+  workflowStatus,
+} from './store.mjs';
 import { startCodexCollector } from './codex-collector.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(here, '../..');
+// Optional real photos: public/avatars/<agent>.<ext> replaces the illustrated SVG when present.
+const PHOTO_TYPES = new Map([
+  ['jpg', 'image/jpeg'],
+  ['jpeg', 'image/jpeg'],
+  ['png', 'image/png'],
+  ['webp', 'image/webp'],
+]);
+const PHOTO_ROUTE = new RegExp(
+  `^/avatars/(${AGENTS.map((a) => a.id).join('|')})\\.(jpg|jpeg|png|webp)$`,
+);
+async function photoFiles(directory) {
+  const found = {};
+  try {
+    for (const file of await readdir(directory)) {
+      const [name, extension] = file.toLowerCase().split('.');
+      if (AGENTS.some((a) => a.id === name) && PHOTO_TYPES.has(extension) && !found[name])
+        found[name] = extension;
+    }
+  } catch {
+    // No avatar folder means illustrated avatars only.
+  }
+  return found;
+}
 const allowedAssets = new Map([
   ['/', ['index.html', 'text/html']],
+  ['/wbs', ['wbs.html', 'text/html']],
   ['/app.js', ['app.js', 'text/javascript']],
+  ['/wbs.js', ['wbs.js', 'text/javascript']],
+  ['/wbs.css', ['wbs.css', 'text/css']],
   ['/activity.js', ['activity.js', 'text/javascript']],
   ['/styles.css', ['styles.css', 'text/css']],
+  ['/theme.css', ['theme.css', 'text/css']],
   ...AGENTS.map((agent) => [
     `/avatars/${agent.id}.svg`,
     [`avatars/${agent.id}.svg`, 'image/svg+xml'],
@@ -23,6 +59,7 @@ export function createDashboard({
   directory = dataDirectory(root),
   collectCodex = root === ROOT && directory === dataDirectory(root),
   sessionsRoot,
+  avatars = path.join(here, 'public', 'avatars'),
 } = {}) {
   const collector = collectCodex ? startCodexCollector({ root, directory, sessionsRoot }) : null;
   const clients = new Set();
@@ -35,24 +72,34 @@ export function createDashboard({
     }
   };
   async function snapshot() {
-    const [events, progress, board, queue] = await Promise.all([
+    const [events, progress, board, queue, photos] = await Promise.all([
       readEvents(directory),
       optionalRead('feature-progress-list.md'),
       optionalRead('task-board.md'),
       optionalRead('feature-queue.md'),
+      photoFiles(avatars),
     ]);
     return {
+      photos,
       project: 'Inventory Management System',
       generatedAt: new Date().toISOString(),
       staleAfterMs: STALE_MS,
       collector: { enabled: Boolean(collector), ...collector?.status() },
       agents: runtime(events),
+      workflow: workflowStatus(events),
       events: events
-        .filter((e) => e.kind !== 'heartbeat')
+        .filter((e) => e.kind !== 'heartbeat' && e.agent !== 'main')
         .slice(-100)
         .reverse(),
       ...parseProject(progress, board, queue),
     };
+  }
+  async function wbs() {
+    const [progress, config] = await Promise.all([
+      optionalRead('feature-progress-list.md'),
+      optionalRead('delivery-config.json'),
+    ]);
+    return { generatedAt: new Date().toISOString(), ...parseWbs(progress, config) };
   }
   const server = http.createServer(async (req, res) => {
     const host = req.headers.host ?? '';
@@ -91,6 +138,11 @@ export function createDashboard({
         res.end(JSON.stringify(await snapshot()));
         return;
       }
+      if (route === '/api/wbs') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(await wbs()));
+        return;
+      }
       if (route === '/api/events') {
         res.writeHead(200, {
           'Content-Type': 'text/event-stream',
@@ -100,6 +152,18 @@ export function createDashboard({
         res.write(`data: ${JSON.stringify(await snapshot())}\n\n`);
         clients.add(res);
         req.on('close', () => clients.delete(res));
+        return;
+      }
+      const photo = route.match(PHOTO_ROUTE);
+      if (photo) {
+        const file = (await photoFiles(avatars))[photo[1]];
+        if (file !== photo[2]) {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': PHOTO_TYPES.get(file) });
+        res.end(await readFile(path.join(avatars, `${photo[1]}.${file}`)));
         return;
       }
       const asset = allowedAssets.get(route);
@@ -141,6 +205,7 @@ export function createDashboard({
   return {
     server,
     snapshot,
+    wbs,
     close: () => {
       collector?.close();
       for (const client of clients) client.end();

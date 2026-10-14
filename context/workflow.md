@@ -16,6 +16,19 @@ Resolve routine reversible implementation choices autonomously. Ask for missing 
 
 Minhaj records the lane in the active feature assignment. Escalate a lane when evidence reveals broader risk. Do not downgrade Deep categories.
 
+### Delivery modes
+
+| Mode (`delivery-config.json`) | Who builds | Who verifies | Layer status after the agent finishes | Estimate columns |
+|---|---|---|---|---|
+| `agent-human-review` (default) | Agents | Human reviews requirements, each implementation layer and the QA report | `Review` → human sets `Done` | Agent + verify hours per layer |
+| `fully-agentic` | Agents | Agents (independent QA as per lane) | `Done` | Agent hours per layer |
+
+Switch with `node scripts/delivery-mode.mjs <mode>`; it rewrites the estimate columns in `feature-progress-list.md`.
+
+### Change requests
+
+Minhaj classifies every additional client requirement. A text/label, color or small font/spacing change with no behavior, data or estimate impact is minor: log it in `change-requests.md` and run it as Fast-lane work. Everything else is a CR: a new feature/function, an addition to an existing feature/function, or any project impact. Minhaj flags it to Nadia → Nadia does the impact analysis (scope, effort hours, schedule) and drafts the client notification → the user sends it → client decision → Minhaj schedules the approved scope.
+
 ### Cost and time controls
 
 - Read the active feature file and directly relevant standards. Do not reread all research or historic handoffs unless a gap requires it.

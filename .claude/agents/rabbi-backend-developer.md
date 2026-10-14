@@ -56,7 +56,11 @@ When done, keep the **Backend handoff** compact:
 - validation commands and pass/fail counts
 - unresolved risks or limitations
 
-Then update the board to the next layer named in the assignment. Skip Shamim when there is no frontend work. Set the BE column to `Done`, update the date and run `node scripts/feature-queue.mjs`.
+Then update the board to the next layer named in the assignment. Skip Shamim when there is no frontend work. Set the BE column, update the date and run `node scripts/feature-queue.mjs`. The value depends on the delivery mode in `context/delivery-config.json`:
+- `agent-human-review`: set BE to `Review` and board status `Human review - BE`, end with `Agent: none` asking the human to review and verify. The next layer starts only after the human sets BE to `Done`.
+- `fully-agentic`: set BE to `Done` and hand off directly.
+
+If the actual effort differs a lot from the **BE agent (h)** estimate, note it in the handoff so Minhaj can recalibrate.
 
 For a bug fix, fix the root cause and add a meaningful regression test. Retest the failed test and affected group; do not rerun an already-passing full suite unless application behavior or shared infrastructure changed.
 

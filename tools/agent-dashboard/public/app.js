@@ -2,10 +2,43 @@
 import { activityOf, activities } from './activity.js';
 const $ = (id) => document.getElementById(id);
 const roles = {
-  minhaj: { name: 'Minhaj', role: 'Project manager', tag: 'THE PLANNER', color: '#dcecc7' },
-  rabbi: { name: 'Rabbi', role: 'Backend developer', tag: 'THE BUILDER', color: '#c9e1f2' },
-  shamim: { name: 'Shamim', role: 'Frontend developer', tag: 'THE DESIGNER', color: '#f2dcc5' },
-  tanvir: { name: 'Tanvir', role: 'QA automation', tag: 'THE GUARDIAN', color: '#ded6ef' },
+  minhaj: {
+    name: 'Minhaj',
+    role: 'Project manager',
+    tag: 'THE PLANNER',
+    color: '#dcecc7',
+    glow: '#a78bfa',
+  },
+  rabbi: {
+    name: 'Rabbi',
+    role: 'Backend developer',
+    tag: 'THE BUILDER',
+    color: '#c9e1f2',
+    glow: '#38bdf8',
+  },
+  shamim: {
+    name: 'Shamim',
+    role: 'Frontend developer',
+    tag: 'THE DESIGNER',
+    color: '#f2dcc5',
+    glow: '#fb923c',
+  },
+  tanvir: {
+    name: 'Tanvir',
+    role: 'QA automation',
+    tag: 'THE GUARDIAN',
+    color: '#ded6ef',
+    glow: '#34d399',
+  },
+  // Change requests run beside the delivery pipeline, not as a step in it.
+  nadia: {
+    name: 'Nadia',
+    role: 'CR manager',
+    tag: 'THE GATEKEEPER',
+    color: '#f3d6dc',
+    glow: '#f472b6',
+    pipeline: false,
+  },
 };
 const labels = {
   active: 'Active',
@@ -23,6 +56,10 @@ let disconnected = true;
 let followLive = true;
 let stageAgent = 'minhaj';
 let stageSession = '';
+// Agents with a real photo in public/avatars/<id>.<ext>, as reported by the server.
+let photos = {};
+// Light path from each activity option to the center agent, and its travelling pulses.
+const activityLinks = new Map();
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -33,9 +70,38 @@ function node(tag, className, text) {
 function set(id, value) {
   $(id).textContent = String(value ?? '—');
 }
+function avatarSrc(id) {
+  const known = Object.hasOwn(roles, id) ? id : 'minhaj';
+  const photo = /^(jpg|jpeg|png|webp)$/.test(photos[known]) ? photos[known] : 'svg';
+  return `/avatars/${known}.${photo}`;
+}
+function refreshAvatars() {
+  for (const image of document.querySelectorAll('img[data-avatar]')) {
+    const src = avatarSrc(image.dataset.avatar);
+    if (!image.src.endsWith(src)) image.src = src;
+    markPhoto(image);
+  }
+}
+// Photos fill their frame; the illustrated SVGs keep their own padding.
+function markPhoto(image) {
+  image.classList.toggle('is-photo', !image.src.endsWith('.svg'));
+}
+// A photo that fails to load falls back to the illustrated avatar.
+document.addEventListener(
+  'error',
+  (event) => {
+    const image = event.target;
+    if (image instanceof HTMLImageElement && image.dataset.avatar && !image.src.endsWith('.svg'))
+      image.src = `/avatars/${image.dataset.avatar}.svg`;
+    if (image instanceof HTMLImageElement) markPhoto(image);
+  },
+  true,
+);
 function avatar(id, className = '') {
   const element = node('img', className);
-  element.src = `/avatars/${Object.hasOwn(roles, id) ? id : 'minhaj'}.svg`;
+  element.dataset.avatar = Object.hasOwn(roles, id) ? id : 'minhaj';
+  element.src = avatarSrc(id);
+  markPhoto(element);
   element.alt = '';
   element.width = 64;
   element.height = 64;
@@ -150,19 +216,54 @@ for (const [id, role] of Object.entries(roles)) {
   });
   cards.set(id, { button, status, task, seen });
   $('agent-grid').append(button);
-  const step = node('div', 'pipeline-step');
-  step.append(avatar(id), node('span', '', role.name));
-  if ($('pipeline').children.length) $('pipeline').append(node('span', 'pipeline-arrow', '→'));
-  $('pipeline').append(step);
+  if (role.pipeline !== false) {
+    const step = node('div', 'pipeline-step');
+    step.append(avatar(id), node('span', '', role.name));
+    if ($('pipeline').children.length) $('pipeline').append(node('span', 'pipeline-arrow', '→'));
+    $('pipeline').append(step);
+  }
   const selector = node('button', 'stage-agent');
   selector.type = 'button';
+  selector.style.setProperty('--agent-color', role.glow);
+  selector.dataset.status = 'idle';
   selector.setAttribute('aria-label', `Focus on ${role.name}`);
   selector.setAttribute('aria-pressed', 'false');
   selector.dataset.stageAgent = id;
-  selector.append(avatar(id), node('span', '', role.name));
+  const nodeAvatar = node('span', 'node-avatar');
+  nodeAvatar.append(avatar(id));
+  const nodeActivity = node('span', 'node-activity', 'Idle');
+  selector.append(nodeAvatar, node('span', 'node-name', role.name), nodeActivity);
   selector.addEventListener('click', () => pinAgent(id));
   $('stage-team').append(selector);
 }
+
+const stationList = [...document.querySelectorAll('[data-activity]')];
+stationList.forEach((station, index) => {
+  const angle = (-90 + (index * 360) / stationList.length) * (Math.PI / 180);
+  const x = (50 + 39 * Math.cos(angle)).toFixed(2);
+  const y = (50 + 41 * Math.sin(angle)).toFixed(2);
+  station.style.setProperty('--x', `${x}%`);
+  station.style.setProperty('--y', `${y}%`);
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('class', 'hub-line');
+  for (const [name, value] of [
+    ['x1', x],
+    ['y1', y],
+    ['x2', '50'],
+    ['y2', '50'],
+  ])
+    line.setAttribute(name, value);
+  $('hub-lines').append(line);
+  const pulses = [0, 1, 2].map((order) => {
+    const pulse = node('i', 'hub-pulse');
+    pulse.style.setProperty('--x1', `${x}%`);
+    pulse.style.setProperty('--y1', `${y}%`);
+    pulse.style.setProperty('--i', order);
+    $('hub-pulses').append(pulse);
+    return pulse;
+  });
+  activityLinks.set(station.dataset.activity, { line, pulses });
+});
 
 function pinAgent(id) {
   stageAgent = id;
@@ -203,7 +304,9 @@ function renderStage() {
   // Stop activity motion when a disconnected snapshot ages, even without another server update.
   const state = activityOf(current, disconnected);
   $('agent-stage').dataset.state = state;
-  $('stage-avatar').src = `/avatars/${stageAgent}.svg`;
+  $('stage-avatar').dataset.avatar = stageAgent;
+  $('stage-avatar').src = avatarSrc(stageAgent);
+  markPhoto($('stage-avatar'));
   set('stage-name', role.name);
   set('stage-role', role.role);
   set('stage-state', activities[state]?.[0] ?? 'Ready for work');
@@ -219,6 +322,9 @@ function renderStage() {
   for (const station of document.querySelectorAll('[data-activity]')) {
     const active = station.dataset.activity === state;
     station.classList.toggle('is-current', active);
+    const link = activityLinks.get(station.dataset.activity);
+    link.line.classList.toggle('is-lit', active);
+    for (const pulse of link.pulses) pulse.classList.toggle('is-lit', active);
     if (active) station.setAttribute('aria-current', 'true');
     else station.removeAttribute('aria-current');
   }
@@ -254,6 +360,43 @@ function renderStage() {
           ? 'Session is active. Its current activity has not been specified.'
           : 'Activity follows reported action metadata; task text does not imply execution.',
   );
+  renderHub();
+  renderWorkflow();
+}
+
+// Every agent thumbnail glows by its own reported status, not just the focused one.
+function renderHub() {
+  for (const button of $('stage-team').children) {
+    const id = button.dataset.stageAgent;
+    const agent = agents().find((item) => item.id === id);
+    const status = disconnected ? 'stale' : statusOf(agent?.status);
+    const activity = activityOf(agent?.current ?? { status }, disconnected);
+    button.dataset.status = status;
+    const text = ['active', 'waiting', 'failed'].includes(status)
+      ? (activities[activity]?.[0] ?? labels[status])
+      : labels[status];
+    button.querySelector('.node-activity').textContent = text;
+  }
+}
+
+// Says whether named agents are doing the work, or only the main session is.
+function renderWorkflow() {
+  const workflow = snapshot?.workflow;
+  const names = (workflow?.agents ?? []).map((agent) => agent.name).join(', ');
+  const [state, text] = disconnected
+    ? ['stale', 'Workflow status unavailable · disconnected']
+    : workflow?.state === 'agents'
+      ? ['agents', `Agentic workflow running · ${names}`]
+      : workflow?.state === 'main'
+        ? [
+            'main',
+            workflow.main.status === 'waiting'
+              ? 'Main session waiting for input · no agents dispatched'
+              : 'Main session only · no agents dispatched',
+          ]
+        : ['idle', 'Idle · no active work'];
+  $('workflow-status').dataset.state = state;
+  set('workflow-label', text);
 }
 
 function applyFilters() {
@@ -441,6 +584,8 @@ function renderProgress() {
 function acceptSnapshot(value) {
   if (!value || !Array.isArray(value.agents)) throw new Error('Invalid snapshot');
   snapshot = value;
+  photos = value.photos && typeof value.photos === 'object' ? value.photos : {};
+  refreshAvatars();
   renderCollector();
   set(
     'project-name',

@@ -14,6 +14,7 @@ pnpm + Turborepo monorepo: `apps/api` (NestJS, Prisma, Better Auth, PostgreSQL o
 | `rabbi-backend-developer` | Rabbi | Database, backend logic, backend unit tests | sonnet |
 | `shamim-frontend-developer` | Shamim | Frontend, Playwright tests | sonnet |
 | `tanvir-qa-automation` | Tanvir | Full-feature QA: unit + Playwright, bug reports | sonnet |
+| `nadia-cr-manager` | Nadia | Change requests: impact analysis, client notification, decision tracking | sonnet |
 
 ## Lean delivery pipeline
 
@@ -32,8 +33,21 @@ The main session coordinates and handles planning, documentation and routine fix
 5. A test-only fix reruns the failed test and affected group. Repeat the full suite only when application behavior, shared infrastructure or risk evidence justifies it.
 6. Minhaj closes clean work and updates progress. Handoffs contain only outcome, contract changes, validation and unresolved risks.
 
-Shared state: `context/feature-queue.md` (generated: done / next / per-role queues / build order), `context/feature-list.md` (all features/sub-features + dependencies), `context/feature-progress-list.md` (per-layer status), `context/task-board.md` (active pipeline + bugs) and `context/features/` (per-feature handoffs). Stop and ask the user when an agent returns `Agent: none` (business decision needed).
+## Delivery mode
+
+`context/delivery-config.json` sets `mode` (show/switch with `node scripts/delivery-mode.mjs [agent-human-review|fully-agentic]`):
+
+- `agent-human-review` (default): agents develop; a human reviews and verifies each layer. Requirement approval needs human sign-off, and each finished layer is set to `Review`. The next layer starts only after the human sets it to `Done`. Estimates include agent and human verify hours.
+- `fully-agentic`: agents develop and verify; layers go straight to `Done`. Estimates include agent hours only.
+
+Per-layer hour estimates live in `context/feature-progress-list.md` (see its *Delivery mode and estimates* section).
+
+## Change requests
+
+Minhaj classifies every additional client requirement. A text/label, color or small font change is not a CR and runs as Fast work. A new feature or function, an addition to an existing one, or anything else that impacts the project is a CR. Minhaj flags it to Nadia, who assesses the impact, drafts the client notification (the user sends it) and tracks the decision in `context/change-requests.md`. Nothing from a CR is built before client approval.
+
+Shared state: `context/feature-queue.md` (generated: done / next / per-role queues / build order), `context/feature-list.md` (all features/sub-features + dependencies), `context/feature-progress-list.md` (per-layer status), `context/task-board.md` (active pipeline + bugs), `context/change-requests.md` (CR register) and `context/features/` (per-feature handoffs). Stop and ask the user when an agent returns `Agent: none` (business decision needed).
 
 ## Local agent dashboard
 
-`pnpm agents:dashboard` serves http://127.0.0.1:4310. Hooks and the local Codex collector observe lifecycle and tool activity automatically without prompts or tool payloads. Do not spend model turns on heartbeat or routine status reports. Use `pnpm agents:report` only for a meaningful handoff or when automatic collection is unavailable. See `tools/agent-dashboard/README.md`.
+`pnpm agents:dashboard` serves http://127.0.0.1:4310. Hooks and the local Codex collector observe lifecycle and tool activity automatically without prompts or tool payloads. Do not spend model turns on heartbeat or routine status reports. The **WBS** page (http://127.0.0.1:4310/wbs) shows the full feature progress list with estimates. Use `pnpm agents:report` only for a meaningful handoff or when automatic collection is unavailable. See `tools/agent-dashboard/README.md`.
