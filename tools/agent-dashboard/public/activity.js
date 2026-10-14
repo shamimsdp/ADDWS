@@ -23,6 +23,27 @@ export function activityOf(session, disconnected = false) {
   return 'working';
 }
 
+// Playful stand-ins for "working, action unspecified". Stable for a while per agent, then it rotates.
+const FUNNY = [
+  'Untangling code…',
+  'Asking the duck…',
+  'Bribing linters…',
+  'Herding commas…',
+  'Feeding hamsters…',
+  'Teaching bytes…',
+  'Blaming the cache…',
+  'Counting to NaN…',
+  'Tea-leaf reading…',
+  'Polishing pixels…',
+  'Charming the bugs…',
+  'Caffeinating…',
+];
+export function funnyWorking(seed = '', now = Date.now()) {
+  let hash = 0;
+  for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return FUNNY[(hash + Math.floor(now / 45000)) % FUNNY.length];
+}
+
 export const activities = {
   reading: ['Reading files', '▤'],
   coding: ['Writing code', '</>'],

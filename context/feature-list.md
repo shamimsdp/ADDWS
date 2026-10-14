@@ -156,6 +156,20 @@ Depends on: FEAT-001, FEAT-003 · Blocked by: —
 | FEAT-011.2 | Quick add at POS | |
 | FEAT-011.3 | Purchase history | Sales, returns, exchanges |
 
+### FEAT-047 Application shell and auth UI — P0
+
+Depends on: FEAT-002, FEAT-003 · Blocked by: —
+
+Added by the project owner (user) 2026-10-14: the web app has no designed auth pages, sidebar, header, footer or main content area. Visual reference: the local agent dashboard (`tools/agent-dashboard`) in a white/light theme. FE-only.
+
+| ID | Sub-feature | Notes |
+|---|---|---|
+| FEAT-047.1 | Auth pages layout and styling | One centred-card layout with brand panel for sign-in, register, forgot/reset password, verify-email, MFA, invitation, `/auth/*`, `/businesses`. FE-only |
+| FEAT-047.2 | App shell | Collapsible sidebar with grouped permission-gated navigation and active states, header (tenant/location area, user menu), main content area with page header, footer, mobile drawer, skip link and landmarks. FE-only |
+| FEAT-047.3 | Dashboard home | Welcome, setup checklist / quick actions, system status. Real metrics stay in FEAT-039.7. FE-only |
+| FEAT-047.4 | Shared page primitives and states | Page header, card, table, empty/loading/error/permission-denied states; unauthenticated redirect to sign-in instead of raw error screens. FE-only |
+| FEAT-047.5 | Re-skin existing pages into the shell | `/organization/*`, `/access/*`, `/integrations` use the shell and primitives. FE-only |
+
 ---
 
 ## Stage 2 — Inventory and procurement

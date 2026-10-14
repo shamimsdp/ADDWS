@@ -6,6 +6,10 @@ import { test } from 'node:test';
 import http from 'node:http';
 import { hookEvent } from './claude-hook.mjs';
 import {
+  currentWork,
+  findContextRoot,
+  readLedger,
+  timeSummary,
   parseProject,
   parseWbs,
   readEvents,
@@ -304,4 +308,133 @@ test('workflow status separates named agents, main session only and idle', async
     workflowStatus(await readEvents(directory), Date.now() + STALE_MS * 2).state,
     'idle',
   );
+});
+
+const layeredProgress = [
+  '## Stage 1 — Foundation',
+  '### FEAT-003 Roles and permissions — P0',
+  '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | BE agent (h) | FE agent (h) | QA agent (h) | Updated |',
+  '|---|---|---|---|---|---|---|---|---|---|---|---|',
+  '| FEAT-003.1 | Predefined roles | QA | Done | Done | In progress | — | 0.5 | 2.25 | 2.25 | 1.5 | — |',
+  '### FEAT-027 Cash shifts and register — P0',
+  '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | BE agent (h) | FE agent (h) | QA agent (h) | Updated |',
+  '|---|---|---|---|---|---|---|---|---|---|---|---|',
+  '| FEAT-027.1 | Register setup | Backend | In progress | Todo | Todo | — | 1 | 2.5 | 2 | 1.5 | — |',
+  '| FEAT-027.2 | Open shift | Backend | In progress | Todo | Todo | — | 0.5 | 4 | 3 | 2.5 | — |',
+  '| FEAT-027.3 | Close shift | Todo | Todo | Todo | Todo | — | 0.5 | 3 | 2.5 | 2 | — |',
+].join('\n');
+
+test('current work per role comes from the tracker, with progress', () => {
+  const work = currentWork(parseWbs(layeredProgress));
+  assert.equal(work.rabbi.feature, 'FEAT-027');
+  assert.deepEqual(work.rabbi.subs, ['FEAT-027.1', 'FEAT-027.2']);
+  assert.equal(work.rabbi.layer, 'BE');
+  assert.equal(work.rabbi.percent, 0);
+  assert.equal(work.rabbi.layerTotal, 3);
+  // QA is in progress on FEAT-003, which has two of its three layers done.
+  assert.equal(work.tanvir.feature, 'FEAT-003');
+  assert.equal(work.tanvir.percent, 67);
+  assert.equal(work.shamim, undefined);
+});
+
+test('working time counts only gaps after an active event and splits across sub-features', async (t) => {
+  const directory = await fixture(t);
+  const base = new Date('2026-10-14T10:00:00Z').getTime();
+  const send = (seconds, status) =>
+    report(
+      directory,
+      {
+        agent: 'rabbi',
+        source: 'claude',
+        sessionId: 'run-1',
+        status,
+        feature: 'FEAT-027',
+        subs: ['FEAT-027.1', 'FEAT-027.2'],
+      },
+      new Date(base + seconds * 1000),
+    );
+  await send(0, 'active');
+  await send(60, 'active'); // +60 s
+  await send(120, 'waiting'); // +60 s, then waiting is not work
+  await send(400, 'active'); // 280 s while waiting: not counted
+  await send(430, 'completed'); // +30 s, run ends
+  await send(1400, 'active'); // a second run starts
+  await send(2200, 'active'); // 800 s is over the gap limit: dropped
+  const { agents, actual } = timeSummary(await readLedger(directory), base + 2300 * 1000);
+  assert.equal(agents.rabbi.runs, 2);
+  assert.equal(agents.rabbi.last.activeMs, 150_000);
+  assert.equal(agents.rabbi.current.activeMs, 100_000); // only the live tail since the last event
+  assert.equal(actual['FEAT-027.1'].BE, 75_000);
+  assert.equal(actual['FEAT-027.2'].BE, 75_000);
+  // The main session is never given a card or a ledger entry.
+  await report(directory, { agent: 'main', source: 'claude', sessionId: 'm', status: 'active' });
+  assert.equal(timeSummary(await readLedger(directory)).agents.main, undefined);
+});
+
+test('events derive their feature from the tracker found above the working directory', async (t) => {
+  const directory = await fixture(t);
+  const workspace = path.join(directory, 'worktree');
+  await mkdir(path.join(workspace, 'context'), { recursive: true });
+  await mkdir(path.join(workspace, 'apps', 'web'), { recursive: true });
+  await writeFile(path.join(workspace, 'context/feature-progress-list.md'), layeredProgress);
+  assert.equal(findContextRoot(path.join(workspace, 'apps', 'web'), 'fallback'), workspace);
+  assert.equal(findContextRoot(path.join(directory, 'nowhere'), 'fallback'), 'fallback');
+  const event = await report(directory, {
+    agent: 'rabbi',
+    source: 'claude',
+    sessionId: 'derive',
+    status: 'active',
+    contextRoot: workspace,
+  });
+  assert.equal(event.feature, 'FEAT-027');
+  assert.deepEqual(event.subs, ['FEAT-027.1', 'FEAT-027.2']);
+});
+
+test('WBS API and stream report live work and actual hours', async (t) => {
+  const directory = await fixture(t);
+  await mkdir(path.join(directory, 'context'));
+  await writeFile(path.join(directory, 'context/feature-progress-list.md'), layeredProgress);
+  const now = Date.now();
+  for (const minutes of [10, 5, 0])
+    await report(
+      directory,
+      {
+        agent: 'rabbi',
+        source: 'claude',
+        sessionId: 'live',
+        status: 'active',
+        contextRoot: directory,
+      },
+      new Date(now - minutes * 60_000),
+    );
+  const dashboard = createDashboard({ root: directory, directory });
+  await new Promise((resolve) => dashboard.server.listen(0, '127.0.0.1', resolve));
+  t.after(() => dashboard.close());
+  const url = `http://127.0.0.1:${dashboard.server.address().port}`;
+  const api = await (await fetch(`${url}/api/wbs`)).json();
+  assert.equal(api.live[0].agent, 'rabbi');
+  assert.equal(api.live[0].feature, 'FEAT-027');
+  assert.deepEqual(api.live[0].subs, ['FEAT-027.1', 'FEAT-027.2']);
+  assert.equal(api.actual['FEAT-027.1'].BE, 0.083); // 10 min over two sub-features
+  const stream = await fetch(`${url}/api/wbs-events`);
+  assert.equal(stream.headers.get('content-type'), 'text/event-stream');
+  const reader = stream.body.getReader();
+  const first = new TextDecoder().decode((await reader.read()).value);
+  await reader.cancel();
+  const pushed = JSON.parse(first.replace(/^data: /, ''));
+  assert.equal(pushed.live[0].name, 'Rabbi');
+  const snapshot = await (await fetch(`${url}/api/snapshot`)).json();
+  assert.equal(snapshot.work.rabbi.feature, 'FEAT-027');
+  assert.equal(snapshot.time.agents.rabbi.runs, 1);
+});
+
+test('funny working labels are stable per agent and rotate over time', async () => {
+  const { funnyWorking } = await import('./public/activity.js');
+  const now = Date.UTC(2026, 9, 14, 10, 0, 0);
+  assert.equal(funnyWorking('rabbi', now), funnyWorking('rabbi', now + 1000));
+  const seen = new Set(
+    Array.from({ length: 12 }, (_, i) => funnyWorking('rabbi', now + i * 45_000)),
+  );
+  assert.ok(seen.size > 6);
+  assert.ok([...seen].every((text) => text.endsWith('…') && !/unspecified/i.test(text)));
 });

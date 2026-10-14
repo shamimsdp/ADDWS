@@ -36,11 +36,11 @@ Status: Implementation
 
 ## Backend handoff
 
-Implementation committed in `1471d6d` on `codex/FEAT-003-roles-permissions`. Agent work finished; BE layer is `Review` (human verification pending).
+Implementation committed in `1471d6d` on `codex/FEAT-003-roles-permissions`. Agent work finished; BE layer is `Done` (agent-verified; fully-agentic mode since 2026-10-14).
 
 ## Frontend handoff
 
-Implementation committed in `1471d6d`. Agent work finished; FE layer is `Review` (human verification pending). Uncommitted test-fixture edits exist in `apps/api/scripts/auth-test-server.mjs` and `apps/web/e2e/helpers/fake-api.ts` (member role -> cashier; fake API returns permissions) and must be reviewed and committed by the branch owner.
+Implementation committed in `1471d6d`. Agent work finished; FE layer is `Done` (agent-verified; fully-agentic mode since 2026-10-14). Uncommitted test-fixture edits exist in `apps/api/scripts/auth-test-server.mjs` and `apps/web/e2e/helpers/fake-api.ts` (member role -> cashier; fake API returns permissions) and must be committed by the branch owner before QA reruns.
 
 ## QA report
 
@@ -74,4 +74,4 @@ Independent focused review completed on frozen commit `1471d6d`.
 
 **To unblock:** the user stops the dev API on port 3001 (or the harness is pointed at a free port), then the Playwright suite is rerun. Commit the pending fixture edits first so the run reflects final code.
 
-**Status:** FEAT-003.1-.4 are NOT Done. QA layer = `In progress` until the browser regression passes and the human signs off. FEAT-003.5 (P1 custom roles) stays deferred.
+**Status:** FEAT-003.1-.4 are NOT Done. QA layer = `In progress` until the browser regression passes (independent QA by Tanvir). FEAT-003.5 (P1 custom roles) stays deferred.

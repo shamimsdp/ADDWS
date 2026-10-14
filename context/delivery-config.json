@@ -1,4 +1,5 @@
 {
-  "mode": "agent-human-review",
+  "_mode": "agent-human-review",
+  "mode": "fully-agentic",
   "estimateUnit": "hours"
 }

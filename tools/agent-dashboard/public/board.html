@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Board · Inventory management</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/theme.css" />
+    <link rel="stylesheet" href="/dashboard.css" />
+    <script src="/app.js" type="module"></script>
+    <script src="/board.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to workspace</a>
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <a class="brand" href="#main"
+        ><span class="brand-mark" aria-hidden="true">a<span>·</span></span
+        ><span>agent<span class="brand-sub">workspace</span></span></a
+      >
+      <div class="workspace-label">DEVELOPER TOOLS</div>
+      <nav>
+        <a class="nav-link" href="/"><span aria-hidden="true">◈</span> Live agents</a>
+        <a class="nav-link" href="/#activity"><span aria-hidden="true">≋</span> Activity feed</a>
+        <a class="nav-link" href="/dashboard"><span aria-hidden="true">▤</span> Dashboard</a>
+        <a class="nav-link selected" href="/board" aria-current="page"
+          ><span aria-hidden="true">▦</span> Board</a
+        >
+        <a class="nav-link" href="/wbs"><span aria-hidden="true">☷</span> WBS</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="local-dot" aria-hidden="true"></span> Local workspace
+        <p>One team. A shared view.</p>
+        <small>Read-only · Loopback only</small>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div><span class="breadcrumb">Workspace /</span> Board</div>
+        <div class="connection" id="connection" role="status">
+          <span class="connection-dot" aria-hidden="true"></span
+          ><span id="connection-label">Connecting…</span>
+        </div>
+      </header>
+      <main id="main">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">DELIVERY</p>
+            <h1>Feature board<span>.</span></h1>
+            <p class="intro">Where every feature is, from backlog to done.</p>
+          </div>
+        </div>
+        <div id="connection-warning" class="notice" role="alert" hidden>
+          Disconnected from the local server. Retrying automatically; displayed activity may be out
+          of date.
+        </div>
+        <section class="panel kanban-panel" id="kanban" aria-labelledby="kanban-title">
+          <div class="panel-heading">
+            <div>
+              <h2 id="kanban-title">Features by delivery stage</h2>
+              <p class="panel-description">
+                <span id="board-total">—</span> · updates live as agents work.
+              </p>
+            </div>
+            <label class="board-filter"
+              >Stage<select id="board-stage" aria-label="Filter board by stage">
+                <option value="all">All stages</option>
+              </select></label
+            >
+          </div>
+          <div id="board" class="board"></div>
+        </section>
+        <footer>
+          <span>Source · context/feature-progress-list.md</span
+          ><span id="snapshot-time">Waiting for first snapshot</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

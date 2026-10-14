@@ -19,10 +19,11 @@
       >
       <div class="workspace-label">DEVELOPER TOOLS</div>
       <nav>
-        <a class="nav-link" href="/#agents"><span aria-hidden="true">◈</span> Mission control</a
-        ><a class="nav-link" href="/#activity"><span aria-hidden="true">≋</span> Activity feed</a
-        ><a class="nav-link" href="/#project"><span aria-hidden="true">▤</span> Project progress</a
-        ><a class="nav-link selected" href="/wbs" aria-current="page"
+        <a class="nav-link" href="/"><span aria-hidden="true">◈</span> Live agents</a>
+        <a class="nav-link" href="/#activity"><span aria-hidden="true">≋</span> Activity feed</a>
+        <a class="nav-link" href="/dashboard"><span aria-hidden="true">▤</span> Dashboard</a>
+        <a class="nav-link" href="/board"><span aria-hidden="true">▦</span> Board</a>
+        <a class="nav-link selected" href="/wbs" aria-current="page"
           ><span aria-hidden="true">☷</span> WBS</a
         >
       </nav>
@@ -65,6 +66,10 @@
           <div>
             <span class="metric-icon blue" aria-hidden="true">⚙</span>
             <div><strong id="wbs-agent">—</strong><span>Agent hours · remaining</span></div>
+          </div>
+          <div>
+            <span class="metric-icon lime" aria-hidden="true">◔</span>
+            <div><strong id="wbs-actual">—</strong><span>Actual agent hours worked</span></div>
           </div>
           <div id="wbs-human-metric">
             <span class="metric-icon purple" aria-hidden="true">◉</span>

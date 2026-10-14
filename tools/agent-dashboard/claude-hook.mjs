@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { agentId, dataDirectory, report } from './store.mjs';
+import { agentId, dataDirectory, findContextRoot, report, transcriptTokens } from './store.mjs';
 
 export function hookEvent(input) {
   const type = input.hook_event_name;
@@ -50,9 +50,15 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     }
     const input = JSON.parse(text);
     const event = hookEvent(input);
+    if (event && input.hook_event_name === 'SubagentStop' && input.agent_transcript_path) {
+      event.tokens = await transcriptTokens(input.agent_transcript_path).catch(() => null);
+    }
     if (event) {
       const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-      await report(dataDirectory(root), event);
+      await report(dataDirectory(root), {
+        ...event,
+        contextRoot: findContextRoot(event.cwd, root),
+      });
     }
   } catch {
     /* fail open: hooks emit no output and cannot interrupt a session */

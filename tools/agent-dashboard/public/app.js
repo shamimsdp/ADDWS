@@ -1,6 +1,14 @@
 /* Local, read-only telemetry UI. Event text is always inserted as text, never HTML. */
-import { activityOf, activities } from './activity.js';
-const $ = (id) => document.getElementById(id);
+import { activityOf, activities, funnyWorking } from './activity.js';
+// The live page and the dashboard share this script. An element that belongs to the other page
+// resolves to a detached placeholder, so rendering code never has to check which page it is on.
+const placeholders = new Map();
+const $ = (id) => {
+  const found = document.getElementById(id);
+  if (found) return found;
+  if (!placeholders.has(id)) placeholders.set(id, document.createElement('div'));
+  return placeholders.get(id);
+};
 const roles = {
   minhaj: {
     name: 'Minhaj',
@@ -106,6 +114,25 @@ function avatar(id, className = '') {
   element.width = 64;
   element.height = 64;
   return element;
+}
+function duration(ms) {
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600)
+    return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`;
+  return `${Math.floor(seconds / 3600)}h ${String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')}m`;
+}
+function compact(count) {
+  return count >= 1e6
+    ? `${(count / 1e6).toFixed(1)}M`
+    : count >= 1e3
+      ? `${(count / 1e3).toFixed(1)}k`
+      : String(count);
+}
+function tokenText(tokens) {
+  return tokens && (tokens.input || tokens.output)
+    ? `${compact(tokens.output)} out · ${compact(tokens.input)} in`
+    : 'Not reported';
 }
 function statusOf(value) {
   return Object.hasOwn(labels, value) ? value : 'idle';
@@ -232,7 +259,12 @@ for (const [id, role] of Object.entries(roles)) {
   const nodeAvatar = node('span', 'node-avatar');
   nodeAvatar.append(avatar(id));
   const nodeActivity = node('span', 'node-activity', 'Idle');
-  selector.append(nodeAvatar, node('span', 'node-name', role.name), nodeActivity);
+  selector.append(
+    nodeAvatar,
+    node('span', 'node-name', role.name),
+    nodeActivity,
+    node('span', 'node-feature'),
+  );
   selector.addEventListener('click', () => pinAgent(id));
   $('stage-team').append(selector);
 }
@@ -309,7 +341,11 @@ function renderStage() {
   markPhoto($('stage-avatar'));
   set('stage-name', role.name);
   set('stage-role', role.role);
-  set('stage-state', activities[state]?.[0] ?? 'Ready for work');
+  set(
+    'stage-state',
+    state === 'working' ? funnyWorking(stageAgent) : (activities[state]?.[0] ?? 'Ready for work'),
+  );
+  renderWork(stageAgent, state);
   set('stage-symbol', activities[state]?.[1] ?? '◷');
   set('stage-task', session?.task || 'No runtime task reported.');
   set('stage-action', session?.action || 'No action reported');
@@ -364,6 +400,47 @@ function renderStage() {
   renderWorkflow();
 }
 
+// Which feature the agent is on, how far it is, and how long it has been working.
+function renderWork(id, state) {
+  const work = snapshot?.work?.[id];
+  const card = $('stage-work');
+  card.hidden = !work;
+  if (work) {
+    set('stage-feature-id', work.feature);
+    set('stage-feature-name', work.name);
+    const layer =
+      { PM: 'Requirements', BE: 'Backend', FE: 'Frontend', QA: 'QA' }[work.layer] ?? work.layer;
+    set(
+      'stage-feature-detail',
+      `${layer} · ${work.subs.map((sub) => sub.replace(/^FEAT-\d+\./, '')).join(', ')}`,
+    );
+    $('stage-progress').value = work.percent;
+    set('stage-progress-text', `${work.percent}%`);
+    set(
+      'stage-progress-detail',
+      `${work.done} of ${work.total} layers done · ${layer} ${work.layerDone} of ${work.layerTotal}`,
+    );
+  }
+  const time = snapshot?.time?.agents?.[id];
+  const runtime = $('stage-runtime');
+  // Wall-clock run time, as Claude Code's own agent view shows it.
+  const ticking = time?.current && state !== 'stale' && state !== 'disconnected';
+  runtime.dataset.liveBase = ticking ? String(time.current.wallMs) : '';
+  runtime.dataset.liveAt = String(Date.now());
+  runtime.textContent = ticking
+    ? duration(time.current.wallMs)
+    : time?.last
+      ? `Last run ${duration(time.last.wallMs)}`
+      : 'Not running';
+  set(
+    'stage-total',
+    time?.runs
+      ? `${duration(time.totalWallMs)} across ${time.runs} run${time.runs === 1 ? '' : 's'}`
+      : 'No runs recorded',
+  );
+  set('stage-tokens', tokenText(time?.tokens));
+}
+
 // Every agent thumbnail glows by its own reported status, not just the focused one.
 function renderHub() {
   for (const button of $('stage-team').children) {
@@ -373,9 +450,14 @@ function renderHub() {
     const activity = activityOf(agent?.current ?? { status }, disconnected);
     button.dataset.status = status;
     const text = ['active', 'waiting', 'failed'].includes(status)
-      ? (activities[activity]?.[0] ?? labels[status])
+      ? activity === 'working'
+        ? funnyWorking(id)
+        : (activities[activity]?.[0] ?? labels[status])
       : labels[status];
     button.querySelector('.node-activity').textContent = text;
+    button.querySelector('.node-activity').title = text;
+    const working = ['active', 'waiting'].includes(status) ? snapshot?.work?.[id]?.feature : '';
+    button.querySelector('.node-feature').textContent = working ?? '';
   }
 }
 
@@ -454,7 +536,32 @@ function renderDetail() {
   row('Last seen', timeNode(agent.lastSeen));
   if (agent.current?.feature) row('Feature', agent.current.feature);
   if (agent.current?.handoffTo) row('Handoff', agent.current.handoffTo);
-  fragment.append(meta, node('h3', 'detail-heading', 'Reported sessions'));
+  const live = node('a', 'detail-link', 'Open in live view →');
+  live.href = `/?agent=${selected}`;
+  fragment.append(meta, live, node('h3', 'detail-heading', 'Recent runs'));
+  const runs = node('ul', 'session-list detail-sessions');
+  for (const run of snapshot?.time?.agents?.[selected]?.recent ?? []) {
+    const item = node('li', 'run-item');
+    const top = node('div', 'session-top');
+    top.append(
+      node('strong', '', run.feature || 'No feature recorded'),
+      node(
+        'span',
+        'status-badge',
+        run.end ? duration(run.wallMs) : `${duration(run.wallMs)} · running`,
+      ),
+    );
+    item.append(
+      top,
+      node('small', '', `${run.tokens ? tokenText(run.tokens) : 'Tokens not reported'}`),
+    );
+    const when = node('small');
+    when.append(timeNode(run.start, 'Started '));
+    item.append(when);
+    runs.append(item);
+  }
+  if (!runs.children.length) runs.append(node('li', 'empty', 'No runs recorded yet.'));
+  fragment.append(runs, node('h3', 'detail-heading', 'Reported sessions'));
   const sessions = node('ul', 'session-list detail-sessions');
   for (const session of agent.sessions ?? []) {
     const item = node('li', 'session-item');
@@ -621,6 +728,7 @@ function acceptSnapshot(value) {
   renderTimeline();
   renderProgress();
   renderStage();
+  window.dispatchEvent(new CustomEvent('dashboard:snapshot', { detail: value }));
 }
 
 function renderCollector() {
@@ -645,6 +753,12 @@ function renderCollector() {
   );
 }
 
+// Opened from a crew card: /?agent=rabbi pins that agent in the observatory.
+const requested = new URLSearchParams(window.location.search).get('agent');
+if (requested && Object.hasOwn(roles, requested)) {
+  stageAgent = requested;
+  followLive = false;
+}
 const stream = new EventSource('/api/events');
 stream.onopen = () => {
   connectionVersion += 1;
@@ -682,6 +796,11 @@ fetch('/api/snapshot', { cache: 'no-store' })
 setInterval(() => {
   for (const element of document.querySelectorAll('[data-time]'))
     element.textContent = (element.dataset.prefix || '') + relative(element.dataset.time);
+  const runtime = $('stage-runtime');
+  if (runtime.dataset.liveBase)
+    runtime.textContent = duration(
+      Number(runtime.dataset.liveBase) + Date.now() - Number(runtime.dataset.liveAt),
+    );
   for (const element of document.querySelectorAll('[data-elapsed]'))
     element.textContent = elapsed(element.dataset.elapsed);
   if (snapshot && disconnected) {

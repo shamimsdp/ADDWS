@@ -2,7 +2,7 @@
 
 Generated 2026-10-14 by `node scripts/feature-queue.mjs` from `feature-list.md` and `feature-progress-list.md`. **Do not edit by hand** — update those files and re-run.
 
-Delivery mode: **agent-human-review** (`context/delivery-config.json`). Agent output marked `Review` waits for human verification before the next layer starts.
+Delivery mode: **fully-agentic** (`context/delivery-config.json`). Agents verify their own layers.
 
 Ranking rule: a feature that more other features depend on (directly or indirectly) goes first. Ties → P0 before P1 → earlier stage → lower ID.
 
@@ -10,30 +10,22 @@ Ranking rule: a feature that more other features depend on (directly or indirect
 
 | Done | Core done | In progress | Ready to assign | Waiting on dependencies | Blocked by decisions |
 |---|---|---|---|---|---|
-| 5 | 0 | 5 | 0 | 37 | 0 |
+| 6 | 0 | 4 | 1 | 37 | 0 |
 
 ## Next to assign (Minhaj)
 
 Start each with a requirement review (status `Requirements`) before handing to Rabbi.
 
-_Nothing ready. Finish in-progress work or resolve decisions below._
+| # | Feature | Priority | Unlocks | Assignable sub-features | Blocked sub-features | First owner |
+|---|---|---|---|---|---|---|
+| 1 | FEAT-042 Localization | P0 | 0 | FEAT-042.1, FEAT-042.2, FEAT-042.3 | — | Rabbi |
 
 ## Work queues by responsibility
 
 ### Minhaj — project manager
 
 **Requirement reviews in progress:**
-- FEAT-027.1 Register setup
-- FEAT-027.2 Open shift with float
-- FEAT-027.3 Cash in / cash out
-- FEAT-027.4 Close shift and reconciliation
-- FEAT-027.5 Shift report (X/Z)
-- FEAT-038.1 Integration health dashboard
-- FEAT-038.2 Failed event list and replay
 - FEAT-038.3 Stock drift reconciliation
-- FEAT-042.1 Bangla / English UI
-- FEAT-042.2 BDT currency and number formatting
-- FEAT-042.3 Business timezone and dates
 - FEAT-045.1 Backup / restore procedure
 - FEAT-045.2 Monitoring and alerting
 - FEAT-045.3 Runbooks
@@ -64,31 +56,27 @@ _None._
 | D-06 | FEAT-037 Online returns | FEAT-037.1, FEAT-037.2, FEAT-037.3 | 0 |
 | D-05 | FEAT-041 Exports | FEAT-041.2 | 0 |
 
-### Human review — verify agent output
-
-- FEAT-003.1 Predefined roles — BE, FE awaiting human review
-- FEAT-003.2 Permission guards — BE, FE awaiting human review
-- FEAT-003.3 Location scoping — BE, FE awaiting human review
-- FEAT-003.4 Cost visibility permission — BE, FE awaiting human review
-
 ### Rabbi — backend
 
 _None._
 
 ### Shamim — frontend
 
-_None._
+- FEAT-027.1 Register setup — frontend build
+- FEAT-027.2 Open shift with float — frontend build
 
 ### Tanvir — QA
 
-_None._
+- FEAT-003.1 Predefined roles — full QA
+- FEAT-003.2 Permission guards — full QA
+- FEAT-003.3 Location scoping — full QA
+- FEAT-003.4 Cost visibility permission — full QA
 
 ## In progress
 
 - FEAT-003 Roles and permissions — FEAT-003.1 (QA), FEAT-003.2 (QA), FEAT-003.3 (QA), FEAT-003.4 (QA)
-- FEAT-027 Cash shifts and register — FEAT-027.1 (Requirements), FEAT-027.2 (Requirements), FEAT-027.3 (Requirements), FEAT-027.4 (Requirements), FEAT-027.5 (Requirements)
-- FEAT-038 Integration health and recovery — FEAT-038.1 (Requirements), FEAT-038.2 (Requirements), FEAT-038.3 (Requirements)
-- FEAT-042 Localization — FEAT-042.1 (Requirements), FEAT-042.2 (Requirements), FEAT-042.3 (Requirements)
+- FEAT-027 Cash shifts and register — FEAT-027.1 (Frontend), FEAT-027.2 (Frontend)
+- FEAT-038 Integration health and recovery — FEAT-038.3 (Requirements)
 - FEAT-045 Backup and operational recovery — FEAT-045.1 (Requirements), FEAT-045.2 (Requirements), FEAT-045.3 (Requirements)
 
 ## Waiting on dependencies
@@ -142,6 +130,7 @@ _None._
 - FEAT-000 Project setup
 - FEAT-001 Tenancy and organization
 - FEAT-002 Authentication and user management
+- FEAT-047 Application shell and auth UI
 - FEAT-031 Integration framework
 - FEAT-046 Local agent dashboard
 
@@ -151,10 +140,10 @@ Wave = earliest point a feature can start (all its dependencies are in earlier w
 
 | Order | Wave | Feature | Priority | Unlocks | Depends on | State |
 |---|---|---|---|---|---|---|
-| 1 | 1 | FEAT-003 Roles and permissions | P0 | 37 | FEAT-002 | In progress |
+| 1 | 1 | FEAT-003 Roles and permissions | P0 | 38 | FEAT-002 | In progress |
 | 2 | 1 | FEAT-027 Cash shifts and register | P0 | 8 | FEAT-001.4, FEAT-002.5 | In progress |
 | 3 | 1 | FEAT-038 Integration health and recovery | P0 | 0 | FEAT-031 | In progress |
-| 4 | 1 | FEAT-042 Localization | P0 | 0 | FEAT-000.5 | In progress |
+| 4 | 1 | FEAT-042 Localization | P0 | 0 | FEAT-000.5 | Ready |
 | 5 | 1 | FEAT-045 Backup and operational recovery | P0 | 0 | FEAT-000.3 | In progress |
 | 6 | 2 | FEAT-005 Catalog masters | P0 | 32 | FEAT-001, FEAT-003 | Waiting |
 | 7 | 2 | FEAT-010 Supplier master | P0 | 6 | FEAT-001, FEAT-003 | Waiting |

@@ -1,6 +1,6 @@
 # FEAT-042: Localization
 
-Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approval of review and estimates)
+Status: Requirements approved 2026-10-14 (human: user); Todo - not yet scheduled
 
 ## Requirement review (Minhaj)
 
@@ -43,7 +43,7 @@ Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approv
 
 **Estimates:** 042.1 5.75 agent h, 042.2 4.75, 042.3 4.75 = 15.25 agent h; human verify 5.5 h.
 
-**Requirements approved:** pending human approval of review and estimates (Q1-Q6 accepted by user 2026-10-14; zero open items - ready for human approval)
+**Requirements approved:** yes (human: user, 2026-10-14)
 
 ## Assignment (Minhaj)
 
@@ -51,7 +51,7 @@ Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approv
 
 **Why this lane / final verifier:** Mostly frontend plus small shared/helper backend work; no migration, tenant-isolation or stock logic. Layers: Shamim (main), Rabbi (042.2/042.3 helpers and settings validation). One independent QA pass (Tanvir) with Playwright language-switch and timezone specs.
 
-**DRAFT - final once the human approves the review and estimates.**
+**FINAL - approved by the human 2026-10-14.**
 
 **User outcome:** Staff use the app in Bangla or English with BDT amounts, Bangladesh number grouping and business-timezone dates.
 
@@ -59,6 +59,6 @@ Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approv
 **In scope:** 042.1 bn catalog, locale provider/switcher, font; 042.2 `format.ts` money/number formatters; 042.3 date formatters, replace 4 raw `toLocaleString()` usages with a guard, timezone-change warning and validation.
 **Out of scope:** `/bn` URL prefix, per-user DB field, thermal-printer Bangla rendering (FEAT-028 check), translating product data.
 **Layers:** Shamim (main), Rabbi (042.2/042.3 helpers and settings validation), then Tanvir. **Lane:** Standard.
-**Acceptance criteria (draft):** language switch applies without reload and survives refresh; no raw keys shown (English fallback); every bn key present; 1250000 renders "12,50,000.00" with ৳; dates dd/mm/yyyy 12-hour in business timezone; Latin digits kept where specified; timezone change warns and does not alter existing documents.
+**Acceptance criteria:** language switch applies without reload and survives refresh; no raw keys shown (English fallback); every bn key present; 1250000 renders "12,50,000.00" with ৳; dates dd/mm/yyyy 12-hour in business timezone; Latin digits kept where specified; timezone change warns and does not alter existing documents.
 **QA focus:** Playwright language-switch and timezone specs; long Bangla strings at mobile and desktop widths.
 **Open item (non-blocking for build):** the client-side Bangla reviewer is not yet named; needed before pilot, not before implementation.

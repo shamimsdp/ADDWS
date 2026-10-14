@@ -11,7 +11,9 @@ Status: planned screens/components, plus the base skeleton components listed und
 | Team access | Staff invitations, revocation and tenant-local deactivation | Implemented FEAT-002; `/access/members` |
 | Register access | Store browser enrollment/approval/revocation and named fixed-deadline session | Implemented FEAT-002; `/access/devices`, `/register` |
 | Tenant onboarding/settings | Business, tax, locations, import and plan setup | Planned |
-| Dashboard | Sales, stock risk, exceptions and actionable summaries | Planned |
+| Dashboard home | Welcome, setup checklist from real data, permission-gated quick actions, system status | Implemented FEAT-047.3; `/` (business metrics stay Planned under FEAT-039.7) |
+| Application shell | Sidebar, drawer, header (tenant, location, user menu), footer, route gate | Implemented FEAT-047.2; every non-auth route |
+| Auth layout | Brand panel plus centred card for all authentication routes | Implemented FEAT-047.1 |
 | Apparel catalog | Styles, collections, color/size matrix and labels | Planned |
 | Inventory | Location balances, status buckets and movement history | Planned |
 | Purchasing/receiving | Supplier, PO, partial receipt and inspection | Planned |
@@ -37,7 +39,7 @@ Add component names, implementation paths, owners and verified states as compone
 
 | Component | Path | Owner | Purpose | Verified states |
 |---|---|---|---|---|
-| App shell (root layout) | `apps/web/src/app/layout.tsx` | Shamim | Skip link, banner, primary nav landmark, main, footer; light theme | Landmarks and focus order (e2e AC-11) |
+| Root layout | `apps/web/src/app/layout.tsx` | Shamim | Document, theme and AuthProvider; route groups `(auth)` and `(app)` add the layouts | `lang` from DEFAULT_LOCALE |
 | SkipLink | `apps/web/src/components/skip-link.tsx` | Shamim | First focusable link to `#main-content` | Hidden until focused, visible on focus, keyboard activation |
 | ApiHealthStatus | `apps/web/src/components/api-health-status.tsx` | Shamim | API liveness via the typed client; retry; shows correlation ID on API errors | Loading, ok, network error, API error body (e2e) |
 | Typed API client | `apps/web/src/lib/api/client.ts` | Shamim | `apiFetch<T>`, `ApiError` (R6 body), `NetworkError`; types from `@ims/shared` | Used by ApiHealthStatus |
@@ -62,4 +64,17 @@ Add component names, implementation paths, owners and verified states as compone
 | SignInPage / MailRequestPage / ResetPage / VerifiedPage / InvitationPage / BusinessesPage | `apps/web/src/components/auth/entry-pages.tsx` | Shamim / Codex | Invitation-based verified email/password entry, verification/reset and authorized business selection | Independent FEAT-002 QA passed: real-cookie flows, authorization/revocation, keyboard/mobile and full browser regression |
 | MfaPage | `apps/web/src/components/auth/mfa-page.tsx` | Shamim / Codex | Local authenticator QR/key, enrollment challenge, one-use recovery, code replacement and disabling with re-enrollment warning | Independent FEAT-002 QA passed: real-cookie flows, authorization/revocation, keyboard/mobile and full browser regression |
 | MembersPage / SessionsPage / DevicesPage / RegisterPage | `apps/web/src/components/auth/access-pages.tsx` | Shamim / Codex | Team invitations/deactivation, own session revocation, store-bound browser approval and named fixed-deadline register access | Independent FEAT-002 QA passed: real-cookie flows, authorization/revocation, keyboard/mobile and full browser regression |
+| AppShell, Sidebar, NavList, MobileDrawer, Header, UserMenu, Footer | `apps/web/src/components/shell/` | Shamim | Landmarked shell: 256 px sidebar or 72 px rail (localStorage preference), native-dialog drawer below 1024 px, tenant name, read-only location area, account menu, version footer, permission-denied main | Keyboard, focus trap, Esc and focus return, aria-current, no horizontal scroll 360-1440 px (e2e app-shell) |
+| Navigation registry | `apps/web/src/lib/navigation.ts` | Shamim | One config (permission, label key, icon, href) feeding sidebar, drawer and route guard; a later feature adds one entry | Owner, cashier-like and no-permission sessions |
+| SessionBoundary / useActivePermissions | `apps/web/src/components/auth/auth-provider.tsx` | Shamim | `scope="app"` redirects anonymous users to `/sign-in?next=`, shows loading and a retryable API-down state; the hook returns active-membership permissions | e2e app-shell AC-6 |
+| AuthLayout, AuthBrandPanel, AuthPanel, AuthLinks | `apps/web/src/app/(auth)/layout.tsx`, `apps/web/src/components/auth/` | Shamim | Brand panel (hidden below 1024 px) plus centred card for every auth route | e2e app-shell AC-1 |
+| BrandMark / Wordmark | `apps/web/src/components/brand.tsx` | Shamim | Token-coloured logo tile and app name (placeholder identity) | Decorative and labelled |
+| DashboardHome, SetupChecklist, QuickActions | `apps/web/src/components/dashboard/` | Shamim | Home: welcome, checklist from existing list endpoints (soft unknown), permission-gated actions | Done, to do, unknown, no-permission, no hidden requests |
+| ErrorPanel | `apps/web/src/components/ui/error-panel.tsx` | Shamim | Route error boundary body (stays inside the shell for `(app)`) | Retry, digest reference |
+| Icons | `apps/web/src/components/ui/icons.tsx` | Shamim | Token-coloured stroke SVG icons (decorative, aria-hidden) | Sizes sm/md/lg |
+| StatusChip | `apps/web/src/components/ui/status-chip.tsx` | Shamim | Success/warning/danger/info/neutral chip with icon + text; `StatusBadge` delegates to it | All tones |
+| Card / CardHeader | `apps/web/src/components/ui/card.tsx` | Shamim | Soft-border white panel and its title row | Dashboard and re-skinned pages |
+| PageHeader | `apps/web/src/components/ui/page-header.tsx` | Shamim | The one h1 per page, description and actions | All shell pages |
+| DataTable | `apps/web/src/components/ui/data-table.tsx` | Shamim | Caption, row headers, in-container horizontal scroll | 360 px no page scroll |
+| Skeleton, LoadingState, EmptyState, ErrorState, PermissionDenied | `apps/web/src/components/ui/states.tsx` | Shamim | Explicit page states with icon tiles; PermissionDenied for a missing permission | Loading, empty, error + retry, denied |
 | AdminOnly / useCanManageBusiness | `apps/web/src/components/auth/auth-provider.tsx` | Shamim / Codex | Hide business mutation controls unless current membership and session permit administration; API remains authority | Independent FEAT-002 QA passed: real-cookie flows, authorization/revocation, keyboard/mobile and full browser regression |

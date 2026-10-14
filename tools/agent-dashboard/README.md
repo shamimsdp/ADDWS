@@ -14,6 +14,19 @@ Five illustrated role avatars represent Minhaj, Rabbi, Shamim, Tanvir and Nadia 
 
 Assignments, completion totals and the next queue read the current checkout's `context/` documents. Runtime events are shared between Git worktrees under the Git common directory's `agent-dashboard/events`. Without Git, `.agent-dashboard/` is ignored by source control. `AGENT_DASHBOARD_DATA_DIR` overrides event storage for tests or a separate local session.
 
+## Pages
+
+| Page | URL | What it shows |
+|---|---|---|
+| Live agents | `/` | The observatory: agent thumbnails, the focused agent in the center with its work options, the feature it is on, run time and tokens, plus the live activity feed |
+| Dashboard | `/dashboard` | Project health numbers, charts (status, progress by stage, hours by feature, agent working time), team status, crew cards and agent details with recent runs |
+| Board | `/board` | Every feature as a card in Backlog / Requirements / Building / QA / Blocked / Done, with live agent chips |
+| WBS | `/wbs` | The full feature progress list with estimates and actual hours |
+
+Crew cards open the agent's details on the dashboard; **Open in live view** there pins that agent on `/`. The delivery mode is shown on the dashboard. Switch it with `pnpm delivery:mode <agent-human-review|fully-agentic>` (or edit `context/delivery-config.json` and run `pnpm delivery:mode --sync`).
+
+Run time is wall-clock, like Claude Code's own agent view. Token counts come from the subagent's transcript when it finishes (the `SubagentStop` hook reads usage numbers only and stores no transcript content); they show as "Not reported" when the hook input has no transcript path.
+
 ## WBS page
 
 **http://127.0.0.1:4310/wbs** shows the full `context/feature-progress-list.md` as a work breakdown structure: stage → feature → sub-feature with overall and per-layer status, bugs, and every hour-estimate column. Totals show done sub-features, agent hours and human review hours (all / remaining), and blocked / awaiting-review counts. Filter by stage, status (including *Awaiting human review*) or text search. The page follows `context/delivery-config.json`: in `fully-agentic` mode only agent estimate columns exist and the human metric is hidden. It re-reads the tracker every 5 seconds through the read-only `/api/wbs` endpoint.
@@ -63,6 +76,14 @@ pnpm agents:test
 Browser checks reuse the project's existing Playwright dependency and Chromium. On a fresh checkout, install project dependencies and run `pnpm --filter web exec playwright install chromium` first. Tests use temporary local telemetry and never access the application database.
 
 Avatars live in `public/avatars/` and can be edited as SVG assets. There are no portrait uploads or external asset requests.
+
+## Feature, progress and working time
+
+The observatory shows which feature the focused agent is on and how far along it is. The feature comes from the tracker (`context/feature-progress-list.md`): the first feature that has a sub-feature where that agent's layer is **In progress** (Rabbi = BE, Shamim = FE, Tanvir = QA, Minhaj = Requirements). Mark layers In progress in the tracker when work starts, or pass `--feature FEAT-XXX` to `agents:report`. In a git worktree the tracker found above the working directory is used. Progress is done layers over applicable layers across the feature's sub-features, plus the agent's own layer.
+
+Working time is recorded per session under the Git common directory's `agent-dashboard/durations`. Time between two events counts only when the earlier event left the agent active, up to 10 minutes per gap (long tool runs send no events), so waiting for input and idle time are not counted. A session's run starts with its first active event and ends on completion. Time is split evenly across the sub-features in progress at that moment. The readout shows the live run time, the total across runs, and the last run once an agent finishes.
+
+The **WBS** page streams from `/api/wbs-events`, so it updates in realtime. Agent cells read `estimate / actual` once that layer has recorded time (for example `2.5 / 0.37`). A feature row shows who is working on it with a live timer, its sub-features are highlighted, and the totals include actual hours. When an agent reports activity without a specific action, the label is a playful phrase that rotates about every 45 seconds instead of "action unspecified".
 
 ## Real agent photos
 

@@ -45,6 +45,23 @@ function pill(value) {
   return node('span', `pill pill-${slug(value)}`, value || '—');
 }
 
+// Hours actually worked (from the agents' recorded runs) on these sub-features, all layers.
+const actualHours = (subs) =>
+  subs.reduce(
+    (total, sub) => total + Object.values(data?.actual?.[sub.id] ?? {}).reduce((a, b) => a + b, 0),
+    0,
+  );
+const LAYER_OF = { PM: 'PM', BE: 'BE', FE: 'FE', QA: 'QA' };
+const layerOf = (column) => LAYER_OF[column.slice(0, 2)] ?? '';
+const clock = (ms) => {
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600)
+    return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`;
+  return `${Math.floor(seconds / 3600)}h ${String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')}m`;
+};
+const liveFor = (feature) => (data?.live ?? []).filter((item) => item.feature === feature.id);
+
 function rollup(subs, columns) {
   const done = subs.filter((s) => s.status === 'Done').length;
   const wrap = node('span', 'wbs-rollup');
@@ -54,7 +71,16 @@ function rollup(subs, columns) {
   bar.value = done;
   bar.setAttribute('aria-label', `${done} of ${subs.length} sub-features done`);
   wrap.append(bar);
-  if (columns.some(isAgent)) wrap.append(node('span', '', `Agent ${hours(sum(subs, isAgent))} h`));
+  if (columns.some(isAgent)) {
+    const worked = actualHours(subs);
+    wrap.append(
+      node(
+        'span',
+        '',
+        `Agent ${hours(sum(subs, isAgent))} h${worked > 0 ? ` · actual ${hours(worked)} h` : ''}`,
+      ),
+    );
+  }
   if (columns.some(isHuman)) wrap.append(node('span', '', `Human ${hours(sum(subs, isHuman))} h`));
   return wrap;
 }
@@ -79,6 +105,8 @@ function table(feature, subs, columns) {
   for (const sub of subs) {
     const row = node('tr');
     row.dataset.sub = sub.id;
+    const working = (data?.live ?? []).filter((item) => item.subs.includes(sub.id));
+    if (working.length) row.classList.add('is-live');
     row.append(node('td', 'mono', sub.id), node('td', 'name', sub.name));
     for (const value of [sub.status, sub.be, sub.fe, sub.qa]) {
       const cell = node('td');
@@ -88,13 +116,18 @@ function table(feature, subs, columns) {
     row.append(node('td', 'bugs', sub.bugs || '—'));
     for (const column of columns) {
       const value = sub.estimates[column];
-      row.append(
-        node(
-          'td',
-          `num ${isHuman(column) ? 'human' : 'agent'}`,
-          value === null || value === undefined ? '—' : hours(value),
-        ),
+      const cell = node(
+        'td',
+        `num ${isHuman(column) ? 'human' : 'agent'}`,
+        value === null || value === undefined ? '—' : hours(value),
       );
+      // Agent cells read "estimate / actual" once that layer has recorded working time.
+      const worked = isAgent(column) ? data?.actual?.[sub.id]?.[layerOf(column)] : undefined;
+      if (worked > 0) {
+        cell.append(node('span', 'actual', ` / ${hours(worked)}`));
+        cell.title = `Estimated ${hours(value ?? 0)} h · actual ${hours(worked)} h`;
+      }
+      row.append(cell);
     }
     row.append(node('td', 'updated', sub.updated || '—'));
     body.append(row);
@@ -144,6 +177,19 @@ function render() {
         node('strong', '', feature.name),
         pill(feature.priority),
       );
+      const live = liveFor(feature);
+      for (const item of live) {
+        const chip = node('span', `live-chip live-${item.status}`);
+        chip.append(
+          node('i', 'live-dot'),
+          node('span', '', `${item.name} · ${item.layer || 'working'} · `),
+        );
+        const timer = node('time', '', clock(item.activeMs));
+        timer.dataset.liveBase = String(item.status === 'active' ? item.activeMs : '');
+        timer.dataset.liveAt = String(Date.now());
+        chip.append(timer);
+        title.append(chip);
+      }
       summary.append(title, rollup(feature.subs, columns));
       details.append(summary, table(feature, subs, columns));
       section.append(details);
@@ -164,6 +210,8 @@ function renderTotals() {
   $('wbs-agent').textContent = `${hours(sum(subs, isAgent))} · ${hours(sum(open, isAgent))}`;
   $('wbs-human-metric').hidden = !human;
   $('wbs-human').textContent = `${hours(sum(subs, isHuman))} · ${hours(sum(open, isHuman))}`;
+  const worked = actualHours(subs);
+  $('wbs-actual').textContent = `${hours(worked)} h`;
   $('wbs-blocked').textContent =
     `${subs.filter((s) => s.status === 'Blocked').length} · ${subs.filter(inReview).length}`;
   const select = $('stage-filter');
@@ -185,13 +233,12 @@ function setConnection(ok) {
   $('wbs-error').hidden = ok;
 }
 
-async function load() {
-  try {
-    const response = await fetch('/api/wbs', { cache: 'no-store' });
-    if (!response.ok) throw new Error('WBS unavailable');
-    const value = await response.json();
-    if (!Array.isArray(value.stages) || !Array.isArray(value.estimateColumns))
-      throw new Error('Invalid WBS');
+function accept(value) {
+  if (!Array.isArray(value.stages) || !Array.isArray(value.estimateColumns))
+    throw new Error('Invalid WBS');
+  value.live ??= [];
+  value.actual ??= {};
+  {
     const next = JSON.stringify({ ...value, generatedAt: undefined });
     $('wbs-time').textContent = `Updated ${new Date(value.generatedAt).toLocaleTimeString()}`;
     setConnection(true);
@@ -200,10 +247,31 @@ async function load() {
     data = value;
     renderTotals();
     render();
+  }
+}
+
+async function load() {
+  try {
+    const response = await fetch('/api/wbs', { cache: 'no-store' });
+    if (!response.ok) throw new Error('WBS unavailable');
+    accept(await response.json());
   } catch {
     setConnection(false);
   }
 }
+
+// Realtime: the server pushes whenever the tracker, a run or an agent's state changes.
+const stream = new EventSource('/api/wbs-events');
+stream.onmessage = (event) => {
+  try {
+    accept(JSON.parse(event.data));
+  } catch {
+    setConnection(false);
+  }
+};
+stream.onerror = () => setConnection(false);
+stream.addEventListener('unavailable', () => setConnection(false));
+window.addEventListener('pagehide', () => stream.close(), { once: true });
 
 for (const id of ['stage-filter', 'status-filter']) $(id).addEventListener('change', render);
 $('search').addEventListener('input', render);
@@ -219,4 +287,12 @@ for (const [id, open] of [
   });
 }
 load();
-setInterval(load, 5000);
+// Slow safety net in case the stream drops silently; live timers tick locally every second.
+setInterval(load, 30000);
+setInterval(() => {
+  for (const timer of document.querySelectorAll('time[data-live-base]'))
+    if (timer.dataset.liveBase)
+      timer.textContent = clock(
+        Number(timer.dataset.liveBase) + Date.now() - Number(timer.dataset.liveAt),
+      );
+}, 1000);

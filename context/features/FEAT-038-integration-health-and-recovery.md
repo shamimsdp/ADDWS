@@ -1,6 +1,6 @@
 # FEAT-038: Integration health and recovery
 
-Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approval of review and estimates)
+Status: Requirements approved 2026-10-14 (human: user); Todo - not yet scheduled (038.3 deferred until FEAT-032)
 
 ## Requirement review (Minhaj)
 
@@ -41,7 +41,7 @@ Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approv
 
 **Estimates:** 038.1 5.25 agent h, 038.2 6.75, 038.3 7 = 19 agent h; human verify 6.25 h (see `feature-progress-list.md`).
 
-**Requirements approved:** pending human approval of review and estimates (Q1-Q5 accepted by user 2026-10-14; zero open items for 038.1/038.2; 038.3 deferred - ready for human approval)
+**Requirements approved:** yes (human: user, 2026-10-14)
 
 ## Assignment (Minhaj)
 
@@ -49,7 +49,7 @@ Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approv
 
 **Why this lane / final verifier:** Replay/discard mutate tenant work state with concurrency (double replay, ordering-key release) and must prove tenant isolation of every new route. Independent QA (Tanvir) with targeted regression of FEAT-031 suites plus the integrations browser flows.
 
-**DRAFT - final once the human approves the review and estimates.**
+**FINAL - approved by the human 2026-10-14.**
 
 **User outcome:** Owners/admins can see integration health per connection and replay or discard failed events.
 
@@ -57,5 +57,5 @@ Status: Requirements - Minhaj (answers accepted 2026-10-14; pending human approv
 **In scope (038.1, 038.2):** routes R1, health from live counts, failed list (redacted error, blocked-behind count, no payload), 30 s polling, confirmation dialogs, loading/empty/error/forbidden states, `ui-registry.md` entries.
 **Deferred (038.3):** stock drift reconciliation waits until FEAT-032 ships (needs a provider, D-02); not assigned now. Design when built: system stock is source of truth, report only, tolerance 0, on-demand plus nightly.
 **Layers:** Rabbi (routes, tests), Shamim (`/integrations` UI), then Tanvir. **Lane:** Deep.
-**Acceptance criteria (draft):** foreign-tenant ids return 404; second concurrent replay gets 409 with no double run; replay of non-dead item 409; discard needs reason (max 500) and non-admins are refused; bulk replay stops at 100; statuses match thresholds; replay on disabled connection tells the user it waits.
+**Acceptance criteria:** foreign-tenant ids return 404; second concurrent replay gets 409 with no double run; replay of non-dead item 409; discard needs reason (max 500) and non-admins are refused; bulk replay stops at 100; statuses match thresholds; replay on disabled connection tells the user it waits.
 **QA focus:** tenant isolation of every route, concurrency, ordering-key release, FEAT-031 regression.

@@ -4,12 +4,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   AGENTS,
+  currentWork,
   dataDirectory,
   parseProject,
   parseWbs,
   readEvents,
+  readLedger,
   runtime,
   STALE_MS,
+  timeSummary,
   workflowStatus,
 } from './store.mjs';
 import { startCodexCollector } from './codex-collector.mjs';
@@ -42,6 +45,12 @@ async function photoFiles(directory) {
 const allowedAssets = new Map([
   ['/', ['index.html', 'text/html']],
   ['/wbs', ['wbs.html', 'text/html']],
+  ['/dashboard', ['dashboard.html', 'text/html']],
+  ['/dashboard.js', ['dashboard.js', 'text/javascript']],
+  ['/dashboard.css', ['dashboard.css', 'text/css']],
+  ['/board', ['board.html', 'text/html']],
+  ['/board.js', ['board.js', 'text/javascript']],
+  ['/project-data.js', ['project-data.js', 'text/javascript']],
   ['/app.js', ['app.js', 'text/javascript']],
   ['/wbs.js', ['wbs.js', 'text/javascript']],
   ['/wbs.css', ['wbs.css', 'text/css']],
@@ -63,7 +72,9 @@ export function createDashboard({
 } = {}) {
   const collector = collectCodex ? startCodexCollector({ root, directory, sessionsRoot }) : null;
   const clients = new Set();
+  const wbsClients = new Set();
   let previous = '';
+  let previousWbs = '';
   const optionalRead = async (name) => {
     try {
       return await readFile(path.join(root, 'context', name), 'utf8');
@@ -79,8 +90,12 @@ export function createDashboard({
       optionalRead('feature-queue.md'),
       photoFiles(avatars),
     ]);
+    const work = currentWork(parseWbs(progress));
+    const time = timeSummary(await readLedger(directory));
     return {
       photos,
+      work,
+      time: { agents: time.agents },
       project: 'Inventory Management System',
       generatedAt: new Date().toISOString(),
       staleAfterMs: STALE_MS,
@@ -99,8 +114,48 @@ export function createDashboard({
       optionalRead('feature-progress-list.md'),
       optionalRead('delivery-config.json'),
     ]);
-    return { generatedAt: new Date().toISOString(), ...parseWbs(progress, config) };
+    const wbsData = parseWbs(progress, config);
+    const work = currentWork(wbsData);
+    const events = await readEvents(directory);
+    const time = timeSummary(await readLedger(directory));
+    // Hours actually worked per sub-feature and layer, and who is working on what right now.
+    const actual = Object.fromEntries(
+      Object.entries(time.actual).map(([id, layers]) => [
+        id,
+        Object.fromEntries(
+          Object.entries(layers).map(([layer, ms]) => [
+            layer,
+            Math.round((ms / 3_600_000) * 1000) / 1000,
+          ]),
+        ),
+      ]),
+    );
+    const live = runtime(events)
+      .filter((agent) => ['active', 'waiting'].includes(agent.status))
+      .map((agent) => ({
+        agent: agent.id,
+        name: agent.name,
+        status: agent.status,
+        layer: work[agent.id]?.layer ?? '',
+        feature: work[agent.id]?.feature ?? agent.current?.feature ?? '',
+        subs: work[agent.id]?.subs ?? agent.current?.subs ?? [],
+        activeMs: time.agents[agent.id]?.current?.activeMs ?? 0,
+      }));
+    return { generatedAt: new Date().toISOString(), ...wbsData, actual, live };
   }
+  // Live elapsed time changes every second; the page ticks it locally, so ignore it when deciding to push.
+  const wbsFingerprint = (state) =>
+    JSON.stringify({
+      ...state,
+      generatedAt: undefined,
+      live: state.live.map((item) => ({ ...item, activeMs: undefined })),
+      actual: Object.fromEntries(
+        Object.entries(state.actual).map(([id, layers]) => [
+          id,
+          Object.fromEntries(Object.entries(layers).map(([k, v]) => [k, Math.round(v * 20) / 20])),
+        ]),
+      ),
+    });
   const server = http.createServer(async (req, res) => {
     const host = req.headers.host ?? '';
     if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(host)) {
@@ -143,6 +198,19 @@ export function createDashboard({
         res.end(JSON.stringify(await wbs()));
         return;
       }
+      if (route === '/api/wbs-events') {
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        });
+        const state = await wbs();
+        previousWbs = wbsFingerprint(state);
+        res.write(`data: ${JSON.stringify(state)}\n\n`);
+        wbsClients.add(res);
+        req.on('close', () => wbsClients.delete(res));
+        return;
+      }
       if (route === '/api/events') {
         res.writeHead(200, {
           'Content-Type': 'text/event-stream',
@@ -182,17 +250,28 @@ export function createDashboard({
   });
   let busy = false;
   const timer = setInterval(async () => {
-    if (busy || !clients.size) return;
+    if (busy || (!clients.size && !wbsClients.size)) return;
     busy = true;
     try {
+      if (wbsClients.size) {
+        const state = await wbs();
+        const fingerprint = wbsFingerprint(state);
+        if (fingerprint !== previousWbs) {
+          previousWbs = fingerprint;
+          for (const client of wbsClients) client.write(`data: ${JSON.stringify(state)}\n\n`);
+        } else for (const client of wbsClients) client.write(': keepalive\n\n');
+      }
+      if (!clients.size) return;
       const state = await snapshot();
-      const fingerprint = JSON.stringify({ ...state, generatedAt: undefined });
+      // Working time ticks every second on the page; real changes always arrive with an event.
+      const fingerprint = JSON.stringify({ ...state, generatedAt: undefined, time: undefined });
       if (fingerprint !== previous) {
         previous = fingerprint;
         for (const client of clients) client.write(`data: ${JSON.stringify(state)}\n\n`);
       } else for (const client of clients) client.write(': keepalive\n\n');
     } catch {
-      for (const client of clients) client.write('event: unavailable\ndata: {}\n\n');
+      for (const client of [...clients, ...wbsClients])
+        client.write('event: unavailable\ndata: {}\n\n');
     } finally {
       busy = false;
     }
@@ -208,7 +287,7 @@ export function createDashboard({
     wbs,
     close: () => {
       collector?.close();
-      for (const client of clients) client.end();
+      for (const client of [...clients, ...wbsClients]) client.end();
       server.close();
     },
   };

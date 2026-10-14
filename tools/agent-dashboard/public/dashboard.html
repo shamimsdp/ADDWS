@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Dashboard · Inventory management</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/theme.css" />
+    <link rel="stylesheet" href="/dashboard.css" />
+    <script src="/app.js" type="module"></script>
+    <script src="/dashboard.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to workspace</a>
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <a class="brand" href="#main"
+        ><span class="brand-mark" aria-hidden="true">a<span>·</span></span
+        ><span>agent<span class="brand-sub">workspace</span></span></a
+      >
+      <div class="workspace-label">DEVELOPER TOOLS</div>
+      <nav>
+        <a class="nav-link" href="/"><span aria-hidden="true">◈</span> Live agents</a>
+        <a class="nav-link" href="/#activity"><span aria-hidden="true">≋</span> Activity feed</a>
+        <a class="nav-link selected" href="/dashboard" aria-current="page"
+          ><span aria-hidden="true">▤</span> Dashboard</a
+        >
+        <a class="nav-link" href="/board"><span aria-hidden="true">▦</span> Board</a>
+        <a class="nav-link" href="/wbs"><span aria-hidden="true">☷</span> WBS</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="local-dot" aria-hidden="true"></span> Local workspace
+        <p>One team. A shared view.</p>
+        <small>Read-only · Loopback only</small>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div><span class="breadcrumb">Workspace /</span> Dashboard</div>
+        <div class="connection" id="connection" role="status">
+          <span class="connection-dot" aria-hidden="true"></span
+          ><span id="connection-label">Connecting…</span>
+        </div>
+      </header>
+      <main id="main">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">PROJECT OVERVIEW</p>
+            <h1>Project dashboard<span>.</span></h1>
+            <p class="intro">Progress, workload and time across the whole build.</p>
+          </div>
+          <div class="project-chip">
+            <span class="project-icon" aria-hidden="true">⚙</span>
+            <div>
+              <small>DELIVERY MODE</small><strong id="mode-chip">—</strong>
+              <em class="mode-hint">Change: pnpm delivery:mode &lt;mode&gt;</em>
+            </div>
+          </div>
+        </div>
+        <div id="connection-warning" class="notice" role="alert" hidden>
+          Disconnected from the local server. Retrying automatically; displayed activity may be out
+          of date.
+        </div>
+        <section class="kpis" aria-label="Project health">
+          <div class="kpi">
+            <small>Overall progress</small><strong id="kpi-percent">—</strong
+            ><span id="kpi-done">—</span>
+          </div>
+          <div class="kpi">
+            <small>In progress</small><strong id="kpi-active">—</strong
+            ><span>sub-features moving</span>
+          </div>
+          <div class="kpi">
+            <small>Blocked</small><strong id="kpi-blocked">—</strong
+            ><span>waiting on decisions</span>
+          </div>
+          <div class="kpi">
+            <small>Features</small><strong id="kpi-features">—</strong
+            ><span id="kpi-features-detail">—</span>
+          </div>
+          <div class="kpi">
+            <small>Agent hours</small><strong id="kpi-hours">—</strong
+            ><span id="kpi-hours-detail">estimated · actual worked</span>
+          </div>
+          <div class="kpi">
+            <small>Working now</small><strong id="kpi-working">—</strong
+            ><span id="kpi-working-detail">agents active</span>
+          </div>
+        </section>
+        <section class="chart-grid" aria-label="Charts">
+          <div class="panel">
+            <div class="panel-heading"><h2>Work items by status</h2></div>
+            <div id="chart-status" class="chart"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-heading"><h2>Progress by stage</h2></div>
+            <div id="chart-stages" class="chart"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Hours by feature</h2>
+              <span class="subtle">estimate vs actual</span>
+            </div>
+            <div id="chart-hours" class="chart"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Agent working time</h2>
+              <span class="subtle">total across runs</span>
+            </div>
+            <div id="chart-agents" class="chart"></div>
+          </div>
+        </section>
+        <section class="metrics" aria-label="Team status">
+          <div>
+            <span class="metric-icon lime" aria-hidden="true">↗</span>
+            <div><strong id="active-count">—</strong><span>Active agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon blue" aria-hidden="true">Ⅱ</span>
+            <div><strong id="waiting-count">—</strong><span>Waiting agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon purple" aria-hidden="true">✓</span>
+            <div><strong id="completed-count">—</strong><span>Completed agents</span></div>
+          </div>
+          <div>
+            <span class="metric-icon neutral" aria-hidden="true">◷</span>
+            <div><strong id="other-count">—</strong><span>Idle / stale / failed</span></div>
+          </div>
+        </section>
+        <section class="pipeline-panel" aria-label="Team handoff pipeline">
+          <div class="section-mini">
+            <strong>The handoff pipeline</strong><span>Each role owns one part of delivery</span>
+          </div>
+          <div id="pipeline" class="pipeline"></div>
+        </section>
+        <section id="agents" aria-labelledby="team-title">
+          <div class="section-heading">
+            <div>
+              <h2 id="team-title">Meet your crew <span class="count-pill">5</span></h2>
+              <p>
+                Runtime activity is reported by sessions. Task assignments are shown separately.
+              </p>
+            </div>
+            <div class="filters">
+              <label
+                >Role<select id="role-filter" aria-label="Filter by role">
+                  <option value="all">All roles</option>
+                  <option value="minhaj">Project manager</option>
+                  <option value="rabbi">Backend</option>
+                  <option value="shamim">Frontend</option>
+                  <option value="tanvir">QA</option>
+                  <option value="nadia">CR manager</option>
+                </select></label
+              ><label
+                >Status<select id="status-filter" aria-label="Filter by status">
+                  <option value="all">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="waiting">Waiting</option>
+                  <option value="idle">Idle</option>
+                  <option value="completed">Completed</option>
+                  <option value="failed">Failed</option>
+                  <option value="stale">Stale</option>
+                </select></label
+              >
+            </div>
+          </div>
+          <div id="agent-grid" class="agent-grid"></div>
+          <p id="no-match" class="empty" hidden>No agents match these filters.</p>
+        </section>
+        <div class="detail-wrap">
+          <aside class="panel detail-panel" aria-labelledby="detail-title">
+            <div class="panel-heading">
+              <h2 id="detail-title">Agent details</h2>
+              <button id="close-detail" class="icon-button" aria-label="Close agent details" hidden>
+                ×
+              </button>
+            </div>
+            <div id="detail-empty" class="detail-empty">
+              <div aria-hidden="true">↖</div>
+              <h3>A closer look</h3>
+              <p>Select an agent to inspect its sessions, assignment and latest reported work.</p>
+            </div>
+            <div id="detail-content" hidden></div>
+          </aside>
+        </div>
+        <section id="project" class="project-grid" aria-label="Project progress and queue">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Project progress</h2>
+              <span class="subtle">From feature tracker</span>
+            </div>
+            <div class="progress-heading">
+              <strong id="progress-percent">—</strong
+              ><span id="progress-summary">Waiting for project snapshot</span>
+            </div>
+            <progress
+              id="project-progress"
+              max="100"
+              value="0"
+              aria-label="Completed project features"
+            ></progress>
+            <div class="progress-legend">
+              <span><i class="legend-dot done"></i><b id="done-count">—</b> done</span
+              ><span
+                ><i class="legend-dot working"></i><b id="progress-count">—</b> in progress</span
+              ><span><i class="legend-dot blocked"></i><b id="blocked-count">—</b> blocked</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Up next</h2>
+              <span class="subtle">Dependency-ranked queue</span>
+            </div>
+            <ul id="next-queue" class="next-queue"></ul>
+          </div>
+        </section>
+        <footer>
+          <span>Local telemetry · No customer data</span
+          ><span id="snapshot-time">Waiting for first snapshot</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

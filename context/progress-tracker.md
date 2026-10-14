@@ -6,6 +6,8 @@ Workflow update: 2026-10-13 — adopted Fast / Standard / Deep execution lanes, 
 
 ## Completed
 
+- [x] FEAT-047 Application shell and auth UI closed 2026-10-14 (FE-only, Standard lane): auth layout, app shell, dashboard home, shared primitives, re-skinned pages. Independent QA: web lint/typecheck/build pass, Playwright 84 passed / 33 skipped (real-API specs), 33 new QA specs pass. BUG-015 (anonymous /businesses not redirected) fixed in 8a40fa9 and closed (retest 66 passed); open-redirect check on `next` safe for 11 hostile values.
+
 - [x] FEAT-002 Authentication and user management closed 2026-10-13: invitation-only verified email/password, multi-business membership, mandatory owner/admin session MFA/recovery, tenant-local deactivation, own-session management and approved store-bound named register access with a fixed maximum 12-hour grant. BUG-012..014 fixed, independently verified and closed; 408 API unit, 16 DB unit, 188 guarded integration and all 86 browser scenarios verified (85 full-run passes plus one corrected-selector retest). Lint/types/build/format pass; owned test fixtures and servers cleaned up.
 
 - [x] FEAT-046 Local agent dashboard closed 2026-10-12: `pnpm agents:dashboard`, four illustrated avatars, live SSE activity/session cards, shared worktree telemetry, Claude hooks and Codex reporting/heartbeat wrapper. Independent QA: 22 tests pass, including seven Chromium browser checks. Local developer tooling only; no database/customer-app change.
@@ -37,6 +39,8 @@ Workflow update: 2026-10-13 — adopted Fast / Standard / Deep execution lanes, 
 
 ## Follow-ups (from FEAT-000)
 
+- [ ] Run real-API Playwright specs once port 3001 is free (combined FEAT-003 + FEAT-047): the user's dev API holds port 3001 and no guarded test branch is configured, so ~33 real-API/real-DB specs have not run (FEAT-003 browser regression; FEAT-047 `authentication.spec.ts`, `organization-real-api.spec.ts`, `qa/real-api.spec.ts`, `qa/org-ui-qa.spec.ts`, `qa/integrations-real-api-qa.spec.ts`, including Shamim's sign-out edits in `authentication.spec.ts` and `helpers/auth-harness.ts`). Needs a free port 3001 and a guarded test branch.
+- [ ] Owner question (FEAT-047, from Tanvir): auth pages use a deep-blue brand panel and are not fully white like the shell; confirm or request a fully light auth screen.
 - [ ] FEAT-002 operational setup: roll out the reviewed authentication migration to the intended development/production branch before using normal sign-in there; configure SMTP sender and production auth secrets through host configuration. Only the guarded test branch was migrated during implementation. Future POS sales APIs must enforce the named register context; checkout/shifts remain FEAT-027.
 
 - [ ] When the GitHub remote exists: push, watch the first CI run, raise any failure as a bug.
@@ -89,5 +93,7 @@ Workflow update: 2026-10-13 — adopted Fast / Standard / Deep execution lanes, 
 | 2026-10-14 | Integration ops (FEAT-038): owner/admin view/replay, discard owner/admin only with mandatory reason and record kept; health Healthy/Warning (lag 15-60 min)/Critical (dead item or lag over 60 min); bulk replay capped at 100 per click; stock drift reconciliation (038.3) deferred until FEAT-032 ships | User confirmation (FEAT-038 Q1-Q5) |
 | 2026-10-14 | Localization (FEAT-042): tenant default language plus per-user cookie override; "৳ 1,250.00", digits follow language except barcodes/SKUs/document and phone numbers/exports (Latin); lakh/crore grouping in both languages; dates dd/mm/yyyy with 12-hour am/pm; business timezone changeable by owner/admin with warning, posted documents keep their business date; agent drafts Bangla, client-side Bangla-fluent reviewer before pilot plus glossary | User confirmation (FEAT-042 Q1-Q6) |
 | 2026-10-14 | Recovery (FEAT-045): RPO 15 min, RTO 4 h; weekly logical dump kept 30 days off-platform; 7-day Neon PITR history accepted only if the Neon plan allows (NOT yet verified); whole-database restore only (tenant data recovered manually); Sentry chosen for error tracking with operator email (+ optional chat) alerts; primary and backup operator, business hours, 1 h critical response; keep application-level isolation for the pilot and revisit RLS after the pilot | User confirmation (FEAT-045 Q1-Q6; open: Neon plan check, Sentry cost ceiling and owner, operator names) |
+| 2026-10-14 | Delivery mode fully-agentic: agents build and verify, no human review gate, `Review` status invalid, agent estimate columns only | User decision |
+| 2026-10-14 | FEAT-047 Application shell and auth UI added by the project owner (FE-only, Standard): light theme with the agent dashboard layout, auth card layout, permission-gated sidebar shell, dashboard home, shared page primitives, re-skin of existing pages; client-side unauthenticated redirect only (API remains enforcement); Bangla text via t(), catalog and switcher stay in FEAT-042.1 | User directive |
 
 Proposals such as modular monolith, initial provider count and UI tokens remain unapproved implementation choices.

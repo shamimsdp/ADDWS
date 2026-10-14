@@ -12,7 +12,12 @@ const { chromium, expect } = createRequire(path.join(ROOT, 'apps/web/package.jso
   '@playwright/test',
 );
 
-async function fixture(t, viewport = { width: 1440, height: 1000 }, collectCodex = false) {
+async function fixture(
+  t,
+  viewport = { width: 1440, height: 1000 },
+  collectCodex = false,
+  route = '/',
+) {
   const directory = await mkdtemp(path.join(tmpdir(), 'ims-dashboard-browser-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(path.join(directory, 'context'));
@@ -47,9 +52,17 @@ async function fixture(t, viewport = { width: 1440, height: 1000 }, collectCodex
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   t.after(() => assert.deepEqual(errors, [], 'No uncaught browser errors'));
-  await page.goto(`http://127.0.0.1:${dashboard.server.address().port}`);
+  await page.goto(`http://127.0.0.1:${dashboard.server.address().port}${route}`);
   await expect(page.locator('#connection-label')).toHaveText('Live connection');
   return { directory, dashboard, page, sessionsRoot, avatars };
+}
+
+// The crew cards and agent details live on the dashboard; the observatory is on the live page.
+async function teamPage(page, dashboard) {
+  const team = await page.context().browser().newPage({ viewport: page.viewportSize() });
+  await team.goto(`http://127.0.0.1:${dashboard.server.address().port}/dashboard`);
+  await expect(team.locator('#connection-label')).toHaveText('Live connection');
+  return team;
 }
 
 test('browser: automatic collector drives the avatar from actual appended runtime records', async (t) => {
@@ -94,14 +107,21 @@ test('browser: automatic collector drives the avatar from actual appended runtim
       last_agent_message: 'private-content-must-not-escape',
     }),
   );
-  await expect(page.locator('[data-agent="shamim"] .status-badge')).toHaveText('Completed');
+  await expect(page.locator('[data-stage-agent="shamim"]')).toHaveAttribute(
+    'data-status',
+    'completed',
+  );
   await expect(page.locator('#agent-stage')).toHaveAttribute('data-state', 'completed');
 });
 
 test('browser: five distinct loaded avatars, empty onboarding and assignment/runtime separation', async (t) => {
-  const { page } = await fixture(t);
-  await expect(page.locator('.agent-card')).toHaveCount(5);
-  await expect(page.locator('.agent-card .status-badge')).toHaveText([
+  const { dashboard, page } = await fixture(t);
+  await expect(page.locator('.stage-agent')).toHaveCount(5);
+  await expect(page.locator('#onboarding')).toBeVisible();
+  await expect(page.locator('[data-stage-agent="nadia"]')).toBeVisible();
+  const team = await teamPage(page, dashboard);
+  await expect(team.locator('.agent-card')).toHaveCount(5);
+  await expect(team.locator('.agent-card .status-badge')).toHaveText([
     'Idle',
     'Idle',
     'Idle',
@@ -109,26 +129,24 @@ test('browser: five distinct loaded avatars, empty onboarding and assignment/run
     'Idle',
   ]);
   // Nadia handles change requests beside the delivery pipeline, not as a handoff step.
-  await expect(page.locator('.pipeline-step')).toHaveText(['Minhaj', 'Rabbi', 'Shamim', 'Tanvir']);
-  await expect(page.locator('[data-stage-agent="nadia"]')).toBeVisible();
-  await expect(page.locator('#onboarding')).toBeVisible();
-  const images = await page
+  await expect(team.locator('.pipeline-step')).toHaveText(['Minhaj', 'Rabbi', 'Shamim', 'Tanvir']);
+  const images = await team
     .locator('.agent-card img')
     .evaluateAll((items) =>
       items.map((image) => ({ src: image.src, loaded: image.complete && image.naturalWidth > 0 })),
     );
   assert.equal(new Set(images.map((image) => image.src)).size, 5);
   assert.ok(images.every((image) => image.loaded));
-  await page.locator('[data-agent="tanvir"]').click();
-  await expect(page.locator('.assignment-item')).toContainText('Local dashboard');
-  await expect(page.locator('#detail-content')).toContainText('No runtime sessions reported.');
-  await expect(page.locator('#active-count')).toHaveText('0');
-  await expect(page.locator('#progress-summary')).toHaveText('1 of 1 work items complete');
-  await expect(page.locator('#next-queue')).toContainText('Authentication');
+  await team.locator('[data-agent="tanvir"]').click();
+  await expect(team.locator('.assignment-item')).toContainText('Local dashboard');
+  await expect(team.locator('#detail-content')).toContainText('No runtime sessions reported.');
+  await expect(team.locator('#active-count')).toHaveText('0');
+  await expect(team.locator('#progress-summary')).toHaveText('1 of 1 work items complete');
+  await expect(team.locator('#next-queue')).toContainText('Authentication');
 });
 
-test('browser: keyboard details, close focus restoration and navigation anchors', async (t) => {
-  const { page } = await fixture(t);
+test('browser: keyboard details, close focus restoration and navigation between pages', async (t) => {
+  const { page } = await fixture(t, undefined, false, '/dashboard');
   const card = page.locator('[data-agent="rabbi"]');
   await card.focus();
   await page.keyboard.press('Enter');
@@ -138,14 +156,21 @@ test('browser: keyboard details, close focus restoration and navigation anchors'
   await page.keyboard.press('Enter');
   await expect(page.locator('#detail-content')).toBeHidden();
   await expect(card).toBeFocused();
+  await page.getByRole('link', { name: 'Board', exact: true }).click();
+  assert.equal(new URL(page.url()).pathname, '/board');
+  await page.getByRole('link', { name: 'Live agents' }).click();
+  assert.equal(new URL(page.url()).pathname, '/');
+  await expect(page.locator('#agent-stage')).toBeVisible();
   await page.getByRole('link', { name: 'Activity feed' }).click();
   assert.equal(new URL(page.url()).hash, '#activity');
-  await page.getByRole('link', { name: 'Project progress' }).click();
-  assert.equal(new URL(page.url()).hash, '#project');
+  await page.getByRole('link', { name: 'Dashboard' }).click();
+  assert.equal(new URL(page.url()).pathname, '/dashboard');
+  await expect(page.locator('#kpi-percent')).toBeVisible();
 });
 
 test('browser: actual SSE updates, role/status filters, concurrent sessions and handoff', async (t) => {
-  const { directory, page } = await fixture(t);
+  const { directory, dashboard, page } = await fixture(t);
+  const team = await teamPage(page, dashboard);
   await report(directory, {
     agent: 'rabbi',
     source: 'codex',
@@ -154,14 +179,14 @@ test('browser: actual SSE updates, role/status filters, concurrent sessions and 
     task: 'Verify live backend',
     feature: 'FEAT-046',
   });
-  const card = page.locator('[data-agent="rabbi"]');
+  const card = team.locator('[data-agent="rabbi"]');
   await expect(card.locator('.agent-task')).toHaveText('Verify live backend');
   await expect(page.locator('#onboarding')).toBeHidden();
-  await page.getByLabel('Filter by status').selectOption('active');
-  await expect(page.locator('.agent-card:visible')).toHaveCount(1);
-  await page.getByLabel('Filter by role').selectOption('tanvir');
-  await expect(page.locator('#no-match')).toBeVisible();
-  await page.getByLabel('Filter by role').selectOption('rabbi');
+  await team.getByLabel('Filter by status').selectOption('active');
+  await expect(team.locator('.agent-card:visible')).toHaveCount(1);
+  await team.getByLabel('Filter by role').selectOption('tanvir');
+  await expect(team.locator('#no-match')).toBeVisible();
+  await team.getByLabel('Filter by role').selectOption('rabbi');
   await report(directory, {
     agent: 'rabbi',
     source: 'claude',
@@ -173,9 +198,9 @@ test('browser: actual SSE updates, role/status filters, concurrent sessions and 
   await expect(page.locator('#timeline')).toContainText('→ shamim');
   await expect(card.locator('.status-badge')).toHaveText('Active');
   await card.click();
-  await expect(page.locator('.session-item')).toHaveCount(2);
-  await expect(page.locator('#detail-content')).toContainText('codex:backend');
-  await expect(page.locator('#detail-content')).toContainText('claude:other');
+  await expect(team.locator('.session-item')).toHaveCount(2);
+  await expect(team.locator('#detail-content')).toContainText('codex:backend');
+  await expect(team.locator('#detail-content')).toContainText('claude:other');
   await report(directory, {
     agent: 'rabbi',
     source: 'codex',
@@ -184,21 +209,23 @@ test('browser: actual SSE updates, role/status filters, concurrent sessions and 
     task: 'Backend ready',
     handoffTo: 'shamim',
   });
-  await expect(page.locator('#no-match')).toBeVisible();
-  await page.getByLabel('Filter by status').selectOption('completed');
+  await expect(team.locator('#no-match')).toBeVisible();
+  await team.getByLabel('Filter by status').selectOption('completed');
   await expect(card).toBeVisible();
   await expect(card.locator('.status-badge')).toHaveText('Completed');
 });
 
 test('browser: old reports become stale and a real heartbeat restores task without timeline noise', async (t) => {
-  const { directory, page } = await fixture(t);
+  const { directory, dashboard, page } = await fixture(t);
+  const team = await teamPage(page, dashboard);
   await report(
     directory,
     { agent: 'shamim', source: 'codex', sessionId: 'frontend', status: 'active', task: 'UI task' },
     new Date(Date.now() - STALE_MS - 5000),
   );
-  const card = page.locator('[data-agent="shamim"]');
+  const card = team.locator('[data-agent="shamim"]');
   await expect(card.locator('.status-badge')).toHaveText('Stale');
+  await expect(page.locator('[data-stage-agent="shamim"]')).toHaveAttribute('data-status', 'stale');
   await report(directory, {
     agent: 'shamim',
     source: 'codex',
@@ -212,7 +239,8 @@ test('browser: old reports become stale and a real heartbeat restores task witho
 });
 
 test('browser: untrusted event text stays literal across cards, details and timeline', async (t) => {
-  const { directory, page } = await fixture(t);
+  const { directory, dashboard, page } = await fixture(t);
+  const team = await teamPage(page, dashboard);
   const task =
     '<img src=x onerror="window.dashboardXss=true"><script>window.dashboardXss=true</script>';
   await report(directory, {
@@ -222,19 +250,25 @@ test('browser: untrusted event text stays literal across cards, details and time
     status: 'active',
     task,
   });
-  await expect(page.locator('[data-agent="tanvir"] .agent-task')).toHaveText(task);
-  await page.locator('[data-agent="tanvir"]').click();
-  await expect(page.locator('#detail-content')).toContainText(task);
+  await expect(team.locator('[data-agent="tanvir"] .agent-task')).toHaveText(task);
+  await team.locator('[data-agent="tanvir"]').click();
+  await expect(team.locator('#detail-content')).toContainText(task);
   await expect(page.locator('#timeline')).toContainText(task);
   assert.equal(await page.evaluate(() => Object.hasOwn(window, 'dashboardXss')), false);
   assert.equal(
-    await page.locator('#timeline script, #detail-content script, .agent-task img').count(),
+    (await page.locator('#timeline script').count()) +
+      (await team.locator('#detail-content script, .agent-task img').count()),
     0,
   );
 });
 
 test('browser: mobile layout has no horizontal overflow including open details and long text', async (t) => {
-  const { directory, page } = await fixture(t, { width: 375, height: 812 });
+  const { directory, dashboard, page } = await fixture(
+    t,
+    { width: 375, height: 812 },
+    false,
+    '/dashboard',
+  );
   await report(directory, {
     agent: 'minhaj',
     source: 'codex',
@@ -245,11 +279,19 @@ test('browser: mobile layout has no horizontal overflow including open details a
   await expect(page.locator('[data-agent="minhaj"] .status-badge')).toHaveText('Active');
   await page.locator('[data-agent="minhaj"]').click();
   await expect(page.locator('#detail-content')).toBeVisible();
-  const dimensions = await page.evaluate(() => ({
-    scroll: document.documentElement.scrollWidth,
-    viewport: window.innerWidth,
-  }));
-  assert.ok(dimensions.scroll <= dimensions.viewport, JSON.stringify(dimensions));
+  const overflow = () =>
+    page.evaluate(() => ({
+      scroll: document.documentElement.scrollWidth,
+      viewport: window.innerWidth,
+    }));
+  const dashboardSize = await overflow();
+  assert.ok(dashboardSize.scroll <= dashboardSize.viewport, JSON.stringify(dashboardSize));
+  for (const route of ['/', '/board', '/wbs']) {
+    await page.goto(`http://127.0.0.1:${dashboard.server.address().port}${route}`);
+    await expect(page.locator('#connection-label')).not.toHaveText('Connecting…');
+    const size = await overflow();
+    assert.ok(size.scroll <= size.viewport, `${route} ${JSON.stringify(size)}`);
+  }
 });
 
 test('browser: stopping its own server shows the disconnected warning and preserves last snapshot', async (t) => {
@@ -257,7 +299,7 @@ test('browser: stopping its own server shows the disconnected warning and preser
   dashboard.close();
   await expect(page.locator('#connection-warning')).toBeVisible();
   await expect(page.locator('#connection-label')).toContainText('Disconnected');
-  await expect(page.locator('.agent-card')).toHaveCount(5);
+  await expect(page.locator('.stage-agent')).toHaveCount(5);
   await expect(page.locator('#agent-stage')).toHaveAttribute('data-state', 'disconnected');
 });
 
@@ -295,7 +337,10 @@ test('browser: central avatar follows real actions, pins agents and selects conc
     status: 'active',
     action: 'Thinking about layout',
   });
-  await expect(page.locator('[data-agent="shamim"] .status-badge')).toHaveText('Active');
+  await expect(page.locator('[data-stage-agent="shamim"]')).toHaveAttribute(
+    'data-status',
+    'active',
+  );
   await expect(page.locator('#stage-name')).toHaveText('Rabbi');
   await page.getByRole('button', { name: 'Follow live' }).click();
   await expect(page.locator('#stage-name')).toHaveText('Shamim');
@@ -388,7 +433,7 @@ test('browser: switching to fully-agentic hides human review estimates', async (
   await expect(page.locator('#wbs-human-metric')).toBeHidden();
   await expect(page.locator('#wbs-agent')).toHaveText('4.25 · 4.25');
   await expect(page.locator('th.human')).toHaveCount(0);
-  await page.getByRole('link', { name: 'Mission control' }).click();
+  await page.getByRole('link', { name: 'Live agents' }).click();
   await expect(page.locator('#connection-label')).toHaveText('Live connection');
 });
 
@@ -453,19 +498,20 @@ test('browser: a real photo replaces the illustrated avatar and falls back when 
     'base64',
   );
   await writeFile(photo, png);
-  await page.goto(`http://127.0.0.1:${dashboard.server.address().port}`);
-  await expect(page.locator('.agent-card[data-agent="nadia"] img')).toHaveAttribute(
+  await page.reload();
+  await expect(page.locator('[data-stage-agent="nadia"] img')).toHaveAttribute(
     'src',
     '/avatars/nadia.png',
   );
-  await expect(page.locator('[data-stage-agent="nadia"] img')).toHaveAttribute(
+  const team = await teamPage(page, dashboard);
+  await expect(team.locator('.agent-card[data-agent="nadia"] img')).toHaveAttribute(
     'src',
     '/avatars/nadia.png',
   );
   // Corrupt bytes: the browser cannot decode it, so the illustration comes back.
   await writeFile(photo, 'not an image');
-  await page.reload();
-  await expect(page.locator('.agent-card[data-agent="nadia"] img')).toHaveAttribute(
+  await team.reload();
+  await expect(team.locator('.agent-card[data-agent="nadia"] img')).toHaveAttribute(
     'src',
     '/avatars/nadia.svg',
   );
@@ -500,4 +546,146 @@ test('browser: workflow chip tells named agents from the main session alone', as
   await expect(page.locator('#workflow-label')).toHaveText(
     'Agentic workflow running · Rabbi, Tanvir',
   );
+});
+
+const trackerFixture = [
+  '## Stage 1 — Foundation',
+  '### FEAT-027 Cash shifts and register — P0',
+  '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | BE agent (h) | FE agent (h) | QA agent (h) | Updated |',
+  '|---|---|---|---|---|---|---|---|---|---|---|---|',
+  '| FEAT-027.1 | Register setup | Backend | In progress | Todo | Todo | — | 1 | 2.5 | 2 | 1.5 | — |',
+  '| FEAT-027.2 | Open shift | Backend | In progress | Todo | Todo | — | 0.5 | 4 | 3 | 2.5 | — |',
+].join('\n');
+
+test('browser: the observatory shows the feature, its progress, run time and a playful label', async (t) => {
+  const { directory, page } = await fixture(t);
+  await writeFile(path.join(directory, 'context/feature-progress-list.md'), trackerFixture);
+  await writeFile(path.join(directory, 'context/delivery-config.json'), '{"mode":"fully-agentic"}');
+  const now = Date.now();
+  for (const minutes of [6, 3, 0])
+    await report(
+      directory,
+      {
+        agent: 'rabbi',
+        source: 'claude',
+        sessionId: 'w',
+        status: 'active',
+        contextRoot: directory,
+      },
+      new Date(now - minutes * 60_000),
+    );
+  await expect(page.locator('#stage-name')).toHaveText('Rabbi');
+  await expect(page.locator('#stage-work')).toBeVisible();
+  await expect(page.locator('#stage-feature-id')).toHaveText('FEAT-027');
+  await expect(page.locator('#stage-feature-name')).toHaveText('Cash shifts and register');
+  await expect(page.locator('#stage-feature-detail')).toHaveText('Backend · 1, 2');
+  await expect(page.locator('#stage-progress-text')).toHaveText('0%');
+  await expect(page.locator('#stage-progress-detail')).toContainText('0 of 6 layers done');
+  await expect(page.locator('#stage-runtime')).toHaveText(/^6m \d\ds$/);
+  await expect(page.locator('#stage-total')).toHaveText(/^6m \d\ds across 1 run$/);
+  await expect(page.locator('[data-stage-agent="rabbi"] .node-feature')).toHaveText('FEAT-027');
+  // No action was reported, so the label is playful instead of "action unspecified".
+  await expect(page.locator('#stage-state')).toHaveText(/…$/);
+  await expect(page.locator('#stage-state')).not.toContainText('unspecified');
+  // The run time keeps ticking without a new event.
+  const before = await page.locator('#stage-runtime').textContent();
+  await expect(page.locator('#stage-runtime')).not.toHaveText(before ?? '', { timeout: 5000 });
+});
+
+test('browser: the WBS shows who is working, estimate / actual hours, and updates in realtime', async (t) => {
+  const { directory, dashboard, page } = await fixture(t);
+  await writeFile(path.join(directory, 'context/feature-progress-list.md'), trackerFixture);
+  await writeFile(path.join(directory, 'context/delivery-config.json'), '{"mode":"fully-agentic"}');
+  const now = Date.now();
+  for (let step = 8; step >= 0; step--)
+    await report(
+      directory,
+      {
+        agent: 'rabbi',
+        source: 'claude',
+        sessionId: 'w',
+        status: 'active',
+        contextRoot: directory,
+      },
+      new Date(now - step * 5 * 60_000),
+    );
+  await page.goto(`http://127.0.0.1:${dashboard.server.address().port}/wbs`);
+  await expect(page.locator('#wbs-mode')).toHaveText('Fully agentic');
+  const chip = page.locator('.live-chip');
+  await expect(chip).toContainText('Rabbi · BE');
+  await expect(page.locator('tr[data-sub="FEAT-027.1"]')).toHaveClass(/is-live/);
+  // 40 minutes of work split over two sub-features: 0.33 h each next to the 2.5 h estimate.
+  await expect(page.locator('tr[data-sub="FEAT-027.1"] td.agent .actual').first()).toHaveText(
+    '/ 0.33',
+  );
+  await expect(page.locator('#wbs-actual')).toHaveText('0.67 h');
+  // Realtime: finishing the run clears the live marker without reloading the page.
+  await report(directory, {
+    agent: 'rabbi',
+    source: 'claude',
+    sessionId: 'w',
+    status: 'completed',
+    contextRoot: directory,
+  });
+  await expect(page.locator('.live-chip')).toHaveCount(0);
+  await expect(page.locator('tr[data-sub="FEAT-027.1"]')).not.toHaveClass(/is-live/);
+});
+
+test('browser: the dashboard shows KPIs and charts, and the board has its own page', async (t) => {
+  const { directory, dashboard, page } = await fixture(t, undefined, false, '/dashboard');
+  await writeFile(
+    path.join(directory, 'context/feature-progress-list.md'),
+    [
+      '## Stage 1 — Foundation',
+      '### FEAT-003 Roles and permissions — P0',
+      '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | BE agent (h) | FE agent (h) | QA agent (h) | Updated |',
+      '|---|---|---|---|---|---|---|---|---|---|---|---|',
+      '| FEAT-003.1 | Predefined roles | QA | Done | Done | In progress | — | 0.5 | 2 | 2 | 1.5 | — |',
+      '### FEAT-027 Cash shifts and register — P0',
+      '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | BE agent (h) | FE agent (h) | QA agent (h) | Updated |',
+      '|---|---|---|---|---|---|---|---|---|---|---|---|',
+      '| FEAT-027.1 | Register setup | Backend | In progress | Todo | Todo | — | 1 | 2.5 | 2 | 1.5 | — |',
+      '### FEAT-030 Offline POS — P0',
+      '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | BE agent (h) | FE agent (h) | QA agent (h) | Updated |',
+      '|---|---|---|---|---|---|---|---|---|---|---|---|',
+      '| FEAT-030.1 | Offline queue | Blocked | Todo | Todo | Todo | — | 1 | 3 | 3 | 2 | — |',
+      '### FEAT-099 Setup — P0',
+      '| ID | Sub-feature | Status | BE (Rabbi) | FE (Shamim) | QA (Tanvir) | Bugs | PM agent (h) | BE agent (h) | FE agent (h) | QA agent (h) | Updated |',
+      '|---|---|---|---|---|---|---|---|---|---|---|---|',
+      '| FEAT-099.1 | Scaffold | Done | Done | N/A | Done | — | 0.25 | 1 | — | 0.5 | — |',
+    ].join('\n'),
+  );
+  await writeFile(path.join(directory, 'context/delivery-config.json'), '{"mode":"fully-agentic"}');
+  await page.reload();
+  // Dashboard: health numbers and the four charts; the board is not on this page.
+  await expect(page.locator('#kpi-percent')).toHaveText('25%');
+  await expect(page.locator('#kpi-done')).toHaveText('1 of 4 sub-features done');
+  await expect(page.locator('#kpi-blocked')).toHaveText('1');
+  await expect(page.locator('#mode-chip')).toHaveText('Fully agentic');
+  await expect(page.locator('#chart-status svg.donut')).toBeVisible();
+  await expect(page.locator('#chart-stages .stage-row')).toHaveCount(1);
+  await expect(page.locator('#chart-hours .hour-row')).not.toHaveCount(0);
+  await expect(page.locator('#board, #kanban')).toHaveCount(0);
+  // Board page: each feature sits in the column for where it is in delivery.
+  await page.getByRole('link', { name: 'Board', exact: true }).click();
+  await expect(page).toHaveURL(/\/board$/);
+  await expect(page.locator('#board-total')).toHaveText('4 features');
+  const inColumn = (column, id) => page.locator(`.column-${column} [data-feature="${id}"]`);
+  await expect(inColumn('qa', 'FEAT-003')).toBeVisible();
+  await expect(inColumn('building', 'FEAT-027')).toBeVisible();
+  await expect(inColumn('blocked', 'FEAT-030')).toBeVisible();
+  await expect(inColumn('done', 'FEAT-099')).toBeVisible();
+  await expect(page.locator('.column-backlog .column-empty')).toBeVisible();
+  // A working agent shows up on its feature card without a reload.
+  await report(directory, {
+    agent: 'rabbi',
+    source: 'claude',
+    sessionId: 'board',
+    status: 'active',
+    contextRoot: directory,
+  });
+  await expect(inColumn('building', 'FEAT-027').locator('.card-live')).toContainText('Rabbi');
+  await page.selectOption('#board-stage', { index: 1 });
+  await expect(page.locator('#board-total')).toHaveText('4 features');
+  assert.ok(dashboard);
 });

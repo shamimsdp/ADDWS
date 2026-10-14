@@ -1,6 +1,7 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export const AGENTS = [
@@ -91,6 +92,7 @@ export async function report(directory, input, now = new Date()) {
   const session = safeText(input.sessionId, 100);
   if (!session || !/^[a-zA-Z0-9:_./-]+$/.test(session))
     throw new Error('A stable session ID is required.');
+  const work = agent === MAIN.id ? null : await workFor(agent, input);
   const event = {
     id: randomUUID(),
     at: now.toISOString(),
@@ -101,7 +103,9 @@ export async function report(directory, input, now = new Date()) {
     kind: input.kind === 'heartbeat' ? 'heartbeat' : 'activity',
     task: safeText(input.task),
     action: safeText(input.action),
-    feature: /^FEAT-\d{3}(?:\.\d+)?$/.test(input.feature ?? '') ? input.feature : '',
+    feature: work?.feature ?? '',
+    subs: work?.subs ?? [],
+    tokens: cleanTokens(input.tokens),
     handoffTo: agentId(input.handoffTo),
     worktree: safeText(path.basename(input.cwd || ''), 80),
   };
@@ -111,6 +115,8 @@ export async function report(directory, input, now = new Date()) {
   const temporary = path.join(folder, `.${name}.tmp`);
   await writeFile(temporary, JSON.stringify(event), { flag: 'wx', mode: 0o600 });
   await rename(temporary, path.join(folder, name));
+  // Working-time accounting must never block or fail reporting.
+  await recordTime(directory, event).catch(() => {});
   return event;
 }
 
@@ -151,6 +157,8 @@ export async function readEvents(directory) {
         task: safeText(event.task),
         action: safeText(event.action),
         feature: /^FEAT-\d{3}(?:\.\d+)?$/.test(event.feature ?? '') ? event.feature : '',
+        subs: cleanSubs(event.subs),
+        tokens: cleanTokens(event.tokens),
         handoffTo: agentId(event.handoffTo),
         worktree: safeText(event.worktree, 80),
       }))
@@ -347,4 +355,258 @@ export function workflowStatus(events, now = Date.now()) {
     agents: agents.map((agent) => ({ id: agent.id, name: agent.name, status: agent.status })),
     main: { status: main.status, action: main.current?.action ?? '', lastSeen: main.lastSeen },
   };
+}
+
+// ---------- Current work and working time ----------
+
+export const LAYER = { minhaj: 'PM', rabbi: 'BE', shamim: 'FE', tanvir: 'QA' };
+// A tool can run for minutes without any event, so gaps up to this length still count as work.
+export const MAX_GAP_MS = 600_000;
+const SUB_ID = /^FEAT-\d{3}\.\d+$/;
+const FEATURE_ID = /^FEAT-\d{3}$/;
+const cleanTokens = (value) => {
+  const count = (n) => (Number.isFinite(n) && n >= 0 ? Math.min(Math.round(n), 1e11) : 0);
+  return value && typeof value === 'object' && (value.input || value.output)
+    ? { input: count(value.input), output: count(value.output) }
+    : null;
+};
+const cleanSubs = (value) =>
+  Array.isArray(value) ? value.filter((id) => SUB_ID.test(id ?? '')).slice(0, 12) : [];
+
+function layerState(sub, layer) {
+  if (layer === 'BE') return sub.be;
+  if (layer === 'FE') return sub.fe;
+  if (layer === 'QA') return sub.qa;
+  return sub.status === 'Requirements' ? 'In progress' : sub.status === 'Todo' ? 'Todo' : 'Done';
+}
+
+// Which feature and sub-features each role is working on, read from the tracker: the first
+// feature that has a sub-feature whose layer for that role is In progress (PM: in Requirements).
+export function currentWork(wbs) {
+  const features = wbs.stages.flatMap((stage) => stage.features);
+  const out = {};
+  for (const [agent, layer] of Object.entries(LAYER)) {
+    const feature = features.find((f) =>
+      f.subs.some((s) => layerState(s, layer) === 'In progress'),
+    );
+    if (!feature) continue;
+    const cells = feature.subs
+      .flatMap((s) => ['BE', 'FE', 'QA'].map((l) => layerState(s, l)))
+      .filter((value) => value !== 'N/A');
+    const mine = feature.subs.map((s) => layerState(s, layer)).filter((value) => value !== 'N/A');
+    const done = cells.filter((value) => value === 'Done').length;
+    out[agent] = {
+      feature: feature.id,
+      name: feature.name,
+      layer,
+      subs: feature.subs.filter((s) => layerState(s, layer) === 'In progress').map((s) => s.id),
+      percent: cells.length ? Math.round((done / cells.length) * 100) : 0,
+      done,
+      total: cells.length,
+      layerDone: mine.filter((value) => value === 'Done').length,
+      layerTotal: mine.length,
+    };
+  }
+  return out;
+}
+
+async function workFor(agent, input) {
+  if (FEATURE_ID.test(input.feature ?? '') || SUB_ID.test(input.feature ?? ''))
+    return { feature: input.feature.slice(0, 8), subs: cleanSubs(input.subs) };
+  if (!input.contextRoot) return null;
+  try {
+    const progress = await readFile(
+      path.join(input.contextRoot, 'context', 'feature-progress-list.md'),
+      'utf8',
+    );
+    const work = currentWork(parseWbs(progress))[agent];
+    return work ? { feature: work.feature, subs: work.subs } : null;
+  } catch {
+    return null;
+  }
+}
+
+const ledgerFile = (directory, sessionId) =>
+  path.join(
+    directory,
+    'durations',
+    `${createHash('sha1').update(sessionId).digest('hex').slice(0, 24)}.json`,
+  );
+const ENDED = ['completed', 'failed', 'idle'];
+
+// One small file per session, so concurrent agents never write the same file. Time between two
+// events counts as work only when the earlier event left the session active.
+export async function recordTime(directory, event) {
+  const file = ledgerFile(directory, event.sessionId);
+  let record;
+  try {
+    record = JSON.parse(await readFile(file, 'utf8'));
+  } catch {
+    record = null;
+  }
+  const at = Date.parse(event.at);
+  record ??= {
+    sessionId: event.sessionId,
+    agent: event.agent,
+    lastAt: at,
+    lastStatus: 'idle',
+    runs: [],
+    bySub: {},
+    byFeature: {},
+  };
+  const gap = at - record.lastAt;
+  let run = record.runs.at(-1);
+  if ((!run || run.end) && ['active', 'waiting'].includes(event.status)) {
+    run = { start: event.at, end: null, activeMs: 0, feature: event.feature, subs: event.subs };
+    record.runs.push(run);
+  }
+  if (run && record.lastStatus === 'active' && gap > 0 && gap <= MAX_GAP_MS) {
+    run.activeMs += gap;
+    for (const id of event.subs)
+      record.bySub[id] = (record.bySub[id] ?? 0) + gap / event.subs.length;
+    if (event.feature)
+      record.byFeature[event.feature] = (record.byFeature[event.feature] ?? 0) + gap;
+  }
+  if (run && !run.end) {
+    if (event.feature) {
+      run.feature = event.feature;
+      run.subs = event.subs;
+    }
+    if (event.tokens) run.tokens = event.tokens;
+    if (ENDED.includes(event.status)) run.end = event.at;
+  }
+  record.lastAt = at;
+  record.lastStatus = event.status;
+  record.runs = record.runs.slice(-20);
+  await mkdir(path.dirname(file), { recursive: true });
+  const temporary = `${file}.${randomUUID()}.tmp`;
+  await writeFile(temporary, JSON.stringify(record), { mode: 0o600 });
+  await rename(temporary, file);
+}
+
+export async function readLedger(directory) {
+  try {
+    const folder = path.join(directory, 'durations');
+    const files = (await readdir(folder)).filter((name) => /^[a-f0-9]{24}\.json$/.test(name));
+    const records = await Promise.all(
+      files.map(async (file) => {
+        try {
+          return JSON.parse(await readFile(path.join(folder, file), 'utf8'));
+        } catch {
+          return null;
+        }
+      }),
+    );
+    return records.filter(
+      (record) => record && typeof record.agent === 'string' && Array.isArray(record.runs),
+    );
+  } catch {
+    return [];
+  }
+}
+
+// Per-agent run times plus actual hours per sub-feature and layer, for the dashboard and WBS.
+export function timeSummary(records, now = Date.now()) {
+  const agents = {};
+  const actual = {};
+  for (const record of records) {
+    if (!Object.hasOwn(LAYER, record.agent)) continue;
+    const summary = (agents[record.agent] ??= {
+      totalMs: 0,
+      totalWallMs: 0,
+      runs: 0,
+      current: null,
+      last: null,
+      tokens: { input: 0, output: 0 },
+      runList: [],
+    });
+    const live =
+      record.lastStatus === 'active' && now - record.lastAt <= MAX_GAP_MS ? now - record.lastAt : 0;
+    for (const run of record.runs) {
+      summary.runs += 1;
+      const open = !run.end && run === record.runs.at(-1);
+      const ms = run.activeMs + (open ? live : 0);
+      summary.totalMs += ms;
+      const wallMs = Math.max(0, (run.end ? Date.parse(run.end) : now) - Date.parse(run.start));
+      summary.totalWallMs += wallMs;
+      summary.tokens.input += run.tokens?.input ?? 0;
+      summary.tokens.output += run.tokens?.output ?? 0;
+      const item = {
+        start: run.start,
+        end: run.end,
+        activeMs: ms,
+        wallMs,
+        tokens: run.tokens ?? null,
+        feature: run.feature ?? '',
+        subs: run.subs ?? [],
+      };
+      summary.runList.push(item);
+      if (open && ['active', 'waiting'].includes(record.lastStatus)) {
+        if (!summary.current || Date.parse(item.start) > Date.parse(summary.current.start))
+          summary.current = { ...item, asOf: new Date(now).toISOString() };
+      } else if (
+        !summary.last ||
+        Date.parse(item.end ?? item.start) > Date.parse(summary.last.end ?? summary.last.start)
+      ) {
+        summary.last = item;
+      }
+    }
+    for (const [id, ms] of Object.entries(record.bySub)) {
+      if (!SUB_ID.test(id)) continue;
+      const layer = LAYER[record.agent];
+      actual[id] ??= {};
+      actual[id][layer] = (actual[id][layer] ?? 0) + ms;
+    }
+  }
+  for (const summary of Object.values(agents)) {
+    summary.recent = summary.runList
+      .sort((a, b) => Date.parse(b.start) - Date.parse(a.start))
+      .slice(0, 8);
+    delete summary.runList;
+  }
+  return { agents, actual };
+}
+
+// Agents in a git worktree keep their own copy of the tracker, so look upward from where they work.
+export function findContextRoot(start, fallback) {
+  let folder = typeof start === 'string' && start ? path.resolve(start) : '';
+  for (let depth = 0; folder && depth < 8; depth++) {
+    if (existsSync(path.join(folder, 'context', 'feature-progress-list.md'))) return folder;
+    const parent = path.dirname(folder);
+    if (parent === folder) break;
+    folder = parent;
+  }
+  return fallback;
+}
+
+// Token totals for one agent run, from its transcript: numbers only, no content is kept.
+export async function transcriptTokens(file) {
+  const info = await stat(file);
+  if (!info.isFile() || info.size > 60_000_000) return null;
+  const byMessage = new Map();
+  let anonymous = 0;
+  for (const line of (await readFile(file, 'utf8')).split('\n')) {
+    if (!line.includes('"usage"')) continue;
+    try {
+      const message = JSON.parse(line)?.message;
+      const usage = message?.usage;
+      if (!usage) continue;
+      const id = message.id ?? `anonymous-${anonymous++}`;
+      const output = usage.output_tokens || 0;
+      // A message can be logged once per content block with the same usage: keep the largest.
+      if (!byMessage.has(id) || output >= byMessage.get(id).output)
+        byMessage.set(id, {
+          input: (usage.input_tokens || 0) + (usage.cache_creation_input_tokens || 0),
+          output,
+        });
+    } catch {
+      // Skip a line that is not JSON.
+    }
+  }
+  const total = { input: 0, output: 0 };
+  for (const usage of byMessage.values()) {
+    total.input += usage.input;
+    total.output += usage.output;
+  }
+  return total.input || total.output ? total : null;
 }

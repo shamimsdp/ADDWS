@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { open, readdir, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { report } from './store.mjs';
+import { findContextRoot, report } from './store.mjs';
 
 const WINDOW = 2 * 1024 * 1024;
 const MAX_LINE = 512 * 1024;
@@ -174,6 +174,7 @@ export function startCodexCollector({
         action: state.action,
         task: 'Observed local Codex activity',
         cwd: state.cwd,
+        contextRoot: findContextRoot(state.cwd, root),
       },
       new Date(state.at),
     );
